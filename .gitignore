@@ -33,10 +33,14 @@ tramp
 dist/
 elpy/
 plugins/
-requests/
+request
 themes/
-trainsent/
+transient
 url/
+session*
+ido.last
+
+bookmarks
 
 # Flycheck
 flycheck_*.el
