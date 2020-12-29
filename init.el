@@ -77,7 +77,7 @@
     ("~/Dropbox/org/gtd/inbox.org" "~/Dropbox/org/gtd/gtd.org")))
  '(package-selected-packages
    (quote
-    (counsel ivy-rich which-key doom-themes doom-modeline swiper ivy exwm use-package magit))))
+    (org-journal counsel ivy-rich which-key doom-themes doom-modeline swiper ivy exwm use-package magit))))
 
 (use-package all-the-icons)
 
