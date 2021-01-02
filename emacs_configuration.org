@@ -48,7 +48,7 @@
 
 (set-face-attribute 'default nil
                     :family "Roboto Mono"
-                    :height 120
+                    :height 140
                     :weight 'normal
                     :width 'normal)
  
@@ -74,7 +74,11 @@
                 eshell-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
+#+end_src
 
+** Usepful base packages
+
+ #+begin_src emacs-lisp
 
 (use-package ivy
   :diminish
@@ -117,6 +121,8 @@
 
 
 * EXWM
+
+All the configuration params currently used in EXWM.
 
 #+begin_src emacs-lisp
 
@@ -218,6 +224,8 @@
 
 
 * Polybar
+
+Very simple polybar 
 
 #+begin_src emacs-lisp
 

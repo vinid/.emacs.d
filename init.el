@@ -27,7 +27,7 @@
 
 (set-face-attribute 'default nil
                     :family "Roboto Mono"
-                    :height 120
+                    :height 140
                     :weight 'normal
                     :width 'normal)
  
@@ -52,8 +52,6 @@
                 shell-mode-hook
                 eshell-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
-
-
 
 (use-package ivy
   :diminish
