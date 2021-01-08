@@ -314,3 +314,22 @@
       (org-babel-tangle))))
 
 (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
+
+(defun search-google ()
+"A function that google a selected region, if any, alternatively asks for something to serach"
+  (interactive)
+  (let ((searchkey  (url-hexify-string (if mark-active
+         (buffer-substring (region-beginning) (region-end))
+       (read-string "Serach String: ")))))
+  (browse-url (concat "https://www.google.com/search?&q=" searchkey))))
+
+(global-set-key (kbd "C-c g") #'search-google)
+
+(defun open-grammarly-with-kill ()
+"A function to open a new grammarly document"
+  (interactive)
+  (progn  
+       (copy-region-as-kill (region-beginning) (region-end))
+       (browse-url "https://app.grammarly.com/docs/new")))
+
+(global-set-key (kbd "C-c C-g") #'open-grammarly-with-kill)

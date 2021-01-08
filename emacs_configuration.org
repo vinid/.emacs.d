@@ -417,3 +417,43 @@ This snippet adds a hook to =org-mode= buffers so that =efs/org-babel-tangle-con
 
 
 #+end_src
+
+
+* Custom Commands
+
+** Google Search
+
+setting up a command to run a simple google search with a key binding
+
+#+begin_src emacs-lisp
+
+(defun search-google ()
+"A function that google a selected region, if any, alternatively asks for something to serach"
+  (interactive)
+  (let ((searchkey  (url-hexify-string (if mark-active
+         (buffer-substring (region-beginning) (region-end))
+       (read-string "Serach String: ")))))
+  (browse-url (concat "https://www.google.com/search?&q=" searchkey))))
+
+(global-set-key (kbd "C-c g") #'search-google)
+       
+  #+end_src
+
+** Grammarly
+
+Setting up a command that opens grammarly on the web and at the same time copies the current region. The content has to be manually pasted.
+
+#+begin_src emacs-lisp
+
+(defun open-grammarly-with-kill ()
+"A function to open a new grammarly document"
+  (interactive)
+  (progn  
+       (copy-region-as-kill (region-beginning) (region-end))
+       (browse-url "https://app.grammarly.com/docs/new")))
+
+(global-set-key (kbd "C-c C-g") #'open-grammarly-with-kill)
+
+  #+end_src
+
+buffer-substring
