@@ -25,19 +25,26 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
-(set-face-attribute 'default nil
-                    :family "Roboto Mono"
-                    :height 140
-                    :weight 'normal
-                    :width 'normal)
- 
+(defvar efs/default-font-size 80)
+(defvar efs/default-variable-font-size 80)
+
+;; Make frame transparency overridable
+(defvar efs/frame-transparency '(90 . 90))
+
+(set-face-attribute 'default nil :font "Fira Code Retina" :height efs/default-font-size)
+
+;; Set the fixed pitch face
+(set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height efs/default-font-size)
+
+;; Set the variable pitch face
+(set-face-attribute 'variable-pitch nil :font "Cantarell" :height efs/default-variable-font-size :weight 'regular)
+
 (use-package all-the-icons)
 
-(load-theme 'wombat)
+(use-package doom-themes
+  :init (load-theme 'doom-palenight t))
 
 (ido-mode 1)
-
-(server-start)
 
 (use-package doom-modeline
   :ensure t
@@ -46,10 +53,18 @@
 
 (global-display-line-numbers-mode t)
 
+(set-frame-parameter (selected-frame) 'alpha efs/frame-transparency)
+(add-to-list 'default-frame-alist `(alpha . ,efs/frame-transparency))
+
+(set-frame-parameter (selected-frame) 'fullscreen 'maximized)
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+
+
 ;; Disable line numbers for some modes
 (dolist (mode '(org-mode-hook
                 term-mode-hook
                 shell-mode-hook
+                treemacs-mode-hook
                 eshell-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
@@ -89,12 +104,26 @@
 
 (global-set-key (kbd "C-M-j") 'counsel-switch-buffer)
 
+;; NOTE: If you want to move everything out of the ~/.emacs.d folder
+;; reliably, set `user-emacs-directory` before loading no-littering!
+;(setq user-emacs-directory "~/.cache/emacs")
+
+(use-package no-littering)
+
+;; no-littering doesn't set this by default so we must place
+;; auto save files in the same path as it uses for sessions
+(setq auto-save-file-name-transforms
+      `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
+
 ;; Load EXWM.
 (require 'exwm)
 
 ;; Fix problems with Ido (if you use it).
 (require 'exwm-config)
 (exwm-config-ido)
+
+;; starting the server
+(server-start)
 
 ;; All buffers created in EXWM mode are named "*EXWM*". You may want to
 ;; change it in `exwm-update-class-hook' and `exwm-update-title-hook', which
@@ -249,6 +278,7 @@
     (setq org-log-done 'time)
     (setq org-log-into-drawer t)
 
+  (require 'org-indent)
 
 
   (use-package org-bullets

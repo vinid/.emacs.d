@@ -44,21 +44,35 @@
 
 ** UI Configuration
 
+*** Fonts
+
 #+begin_src emacs-lisp
 
-(set-face-attribute 'default nil
-                    :family "Roboto Mono"
-                    :height 140
-                    :weight 'normal
-                    :width 'normal)
- 
+(defvar efs/default-font-size 80)
+(defvar efs/default-variable-font-size 80)
+
+;; Make frame transparency overridable
+(defvar efs/frame-transparency '(90 . 90))
+
+(set-face-attribute 'default nil :font "Fira Code Retina" :height efs/default-font-size)
+
+;; Set the fixed pitch face
+(set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height efs/default-font-size)
+
+;; Set the variable pitch face
+(set-face-attribute 'variable-pitch nil :font "Cantarell" :height efs/default-variable-font-size :weight 'regular)
+#+end_src
+
+*** Theme
+
+#+begin_src emacs-lisp
+
 (use-package all-the-icons)
 
-(load-theme 'wombat)
+(use-package doom-themes
+  :init (load-theme 'doom-palenight t))
 
 (ido-mode 1)
-
-(server-start)
 
 (use-package doom-modeline
   :ensure t
@@ -67,16 +81,27 @@
 
 (global-display-line-numbers-mode t)
 
+(set-frame-parameter (selected-frame) 'alpha efs/frame-transparency)
+(add-to-list 'default-frame-alist `(alpha . ,efs/frame-transparency))
+
+(set-frame-parameter (selected-frame) 'fullscreen 'maximized)
+(add-to-list 'default-frame-alist '(fullscreen . maximized))
+
+
 ;; Disable line numbers for some modes
 (dolist (mode '(org-mode-hook
                 term-mode-hook
                 shell-mode-hook
+                treemacs-mode-hook
                 eshell-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
+
 #+end_src
 
+
 ** Usepful base packages
+*** Ivy
 
  #+begin_src emacs-lisp
 
@@ -97,6 +122,12 @@
          ("C-d" . ivy-reverse-i-search-kill))
   :config
   (ivy-mode 1))
+
+#+end_src 
+
+*** Rainbow Which Key and Counsel
+
+#+begin_src emacs-lisp 
 
 (use-package rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
@@ -119,6 +150,22 @@
 
 #+end_src
 
+** Keep Folders Clean
+
+#+begin_src emacs-lisp
+
+;; NOTE: If you want to move everything out of the ~/.emacs.d folder
+;; reliably, set `user-emacs-directory` before loading no-littering!
+;(setq user-emacs-directory "~/.cache/emacs")
+
+(use-package no-littering)
+
+;; no-littering doesn't set this by default so we must place
+;; auto save files in the same path as it uses for sessions
+(setq auto-save-file-name-transforms
+      `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
+#+end_src
+
 
 * EXWM
 
@@ -132,6 +179,9 @@ All the configuration params currently used in EXWM.
 ;; Fix problems with Ido (if you use it).
 (require 'exwm-config)
 (exwm-config-ido)
+
+;; starting the server
+(server-start)
 
 ;; All buffers created in EXWM mode are named "*EXWM*". You may want to
 ;; change it in `exwm-update-class-hook' and `exwm-update-title-hook', which
@@ -298,9 +348,8 @@ Very simple polybar
     (visual-line-mode 1))
 
 
-
-
 #+end_src
+
 
 ** Org Setup
 
@@ -315,6 +364,7 @@ Very simple polybar
     (setq org-log-done 'time)
     (setq org-log-into-drawer t)
 
+  (require 'org-indent)
 
 
   (use-package org-bullets
@@ -377,10 +427,10 @@ Very simple polybar
    :config
   (add-to-list 'org-modules 'org-tempo))
 
-
-
 #+end_src 
 
+
+#+end_src
 
 ** Configure Babel Languages
 
@@ -396,7 +446,6 @@ To execute or export code in =org-mode= code blocks, you'll need to set up =org-
   (push '("conf-unix" . conf-unix) org-src-lang-modes)
 
 #+end_src
-
 
 ** Auto-tangle Configuration Files
 
@@ -457,3 +506,7 @@ Setting up a command that opens grammarly on the web and at the same time copies
   #+end_src
 
 buffer-substring
+
+* Reference
+
+This configuration is built around the one provided by David Wilson in his stream [[https://github.com/daviwil/emacs-from-scratch/blob/master/Emacs.org][Emacs From Scratch]]
