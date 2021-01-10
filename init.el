@@ -4,9 +4,6 @@
 (setq inhibit-startup-screen t)
 (setq visible-bell t)
 
-(defvar efs/default-font-size 180)
-(defvar efs/default-variable-font-size 180)
-
 ;; Initialize package sources
 (require 'package)
 
@@ -25,19 +22,19 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
-(defvar efs/default-font-size 80)
-(defvar efs/default-variable-font-size 80)
+(defvar vinid/default-font-size 180)
+(defvar vinid/default-variable-font-size 180)
 
 ;; Make frame transparency overridable
 (defvar efs/frame-transparency '(90 . 90))
 
-(set-face-attribute 'default nil :font "Fira Code Retina" :height efs/default-font-size)
+(set-face-attribute 'default nil :font "Fira Code Retina" :height vinid/default-font-size)
 
 ;; Set the fixed pitch face
-(set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height efs/default-font-size)
+(set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height vinid/default-font-size)
 
 ;; Set the variable pitch face
-(set-face-attribute 'variable-pitch nil :font "Cantarell" :height efs/default-variable-font-size :weight 'regular)
+(set-face-attribute 'variable-pitch nil :font "Cantarell" :height vinid/default-variable-font-size :weight 'regular)
 
 (use-package all-the-icons)
 
@@ -115,6 +112,11 @@
 (setq auto-save-file-name-transforms
       `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
 
+(setq eshell-prompt-function
+       (lambda ()
+          (concat "[" (getenv "USER") 
+           (eshell/pwd) (if (= (user-uid) 0) " # " " λ "))))
+
 ;; Load EXWM.
 (require 'exwm)
 
@@ -165,7 +167,7 @@
         ;; Bind "s-&" to launch applications ('M-&' also works if the output
         ;; buffer does not bother you).
         ([?\s-&] . (lambda (command)
-		     (interactive (list (read-shell-command "$ ")))
+		     (interactive (list (read-shell-command "λ ")))
 		     (start-process-shell-command command nil command)))
         ;; Bind "s-<f2>" to "slock", a simple X display locker.
         ([s-f2] . (lambda ()
@@ -264,13 +266,13 @@
   (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
   (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch))
 
-(defun efs/org-mode-setup ()
+(defun vinid/org-mode-setup ()
   (org-indent-mode)
   (variable-pitch-mode 1)
   (visual-line-mode 1))
 
 (use-package org
-    :hook (org-mode . efs/org-mode-setup)
+    :hook (org-mode . vinid/org-mode-setup)
     :config
     (setq org-ellipsis " ▾"))
 
@@ -299,6 +301,7 @@
 
 (setq org-agenda-files '("~/Dropbox/org/gtd/study.org"
                          "~/Dropbox/org/gtd/gtd.org"
+                         "~/Dropbox/org/gtd/habits.org"
 			 "~/org/research.org"))
 
 (setq org-capture-templates '(("t" "Todo [inbox]" entry
@@ -323,6 +326,9 @@
 (setq org-treat-S-cursor-todo-selection-as-state-change nil)
 
 (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+
+(require 'org-habit)
+(add-to-list 'org-modules 'org-habit)
 
 (use-package org
    :config
@@ -359,7 +365,7 @@
 "A function to open a new grammarly document"
   (interactive)
   (progn  
-       (copy-region-as-kill (region-beginning) (region-end))
+       (if mark-active (copy-region-as-kill (region-beginning) (region-end)) nil)
        (browse-url "https://app.grammarly.com/docs/new")))
 
 (global-set-key (kbd "C-c C-g") #'open-grammarly-with-kill)

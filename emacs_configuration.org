@@ -13,8 +13,6 @@
  (setq inhibit-startup-screen t)
  (setq visible-bell t)
 
- (defvar efs/default-font-size 180)
- (defvar efs/default-variable-font-size 180)
 
 #+END_SRC
 
@@ -48,19 +46,19 @@
 
 #+begin_src emacs-lisp
 
-(defvar efs/default-font-size 80)
-(defvar efs/default-variable-font-size 80)
+(defvar vinid/default-font-size 180)
+(defvar vinid/default-variable-font-size 180)
 
 ;; Make frame transparency overridable
 (defvar efs/frame-transparency '(90 . 90))
 
-(set-face-attribute 'default nil :font "Fira Code Retina" :height efs/default-font-size)
+(set-face-attribute 'default nil :font "Fira Code Retina" :height vinid/default-font-size)
 
 ;; Set the fixed pitch face
-(set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height efs/default-font-size)
+(set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height vinid/default-font-size)
 
 ;; Set the variable pitch face
-(set-face-attribute 'variable-pitch nil :font "Cantarell" :height efs/default-variable-font-size :weight 'regular)
+(set-face-attribute 'variable-pitch nil :font "Cantarell" :height vinid/default-variable-font-size :weight 'regular)
 #+end_src
 
 *** Theme
@@ -167,6 +165,16 @@
 #+end_src
 
 
+* Eshell
+
+#+begin_src emacs-lisp
+   (setq eshell-prompt-function
+          (lambda ()
+             (concat "[" (getenv "USER") 
+              (eshell/pwd) (if (= (user-uid) 0) " # " " λ "))))
+#+end_src
+
+
 * EXWM
 
 All the configuration params currently used in EXWM.
@@ -223,7 +231,7 @@ All the configuration params currently used in EXWM.
         ;; Bind "s-&" to launch applications ('M-&' also works if the output
         ;; buffer does not bother you).
         ([?\s-&] . (lambda (command)
-		     (interactive (list (read-shell-command "$ ")))
+		     (interactive (list (read-shell-command "λ ")))
 		     (start-process-shell-command command nil command)))
         ;; Bind "s-<f2>" to "slock", a simple X display locker.
         ([s-f2] . (lambda ()
@@ -274,6 +282,155 @@ All the configuration params currently used in EXWM.
 
 
 * Polybar
+
+#+begin_src shell :tangle /home/vinid/.config/polybar/config :mkdirp yes
+ 
+; Docs: https://github.com/polybar/polybar
+;==========================================================
+[settings]
+screenchange-reload = true
+
+[global/wm]
+margin-top = 0
+margin-bottom = 0
+
+[colors]
+background = #f0232635
+background-alt = #576075
+foreground = #A6Accd
+foreground-alt = #555
+primary = #ffb52a
+secondary = #e60053
+alert = #bd2c40
+underline-1 = #c792ea
+
+[bar/panel]
+width = 100%
+height = 35
+offset-x = 0
+offset-y = 0
+fixed-center = true
+enable-ipc = true
+
+background = ${colors.background}
+foreground = ${colors.foreground}
+
+line-size = 2
+line-color = #f00
+
+border-size = 0
+border-color = #00000000
+
+padding-top = 5
+padding-left = 1
+padding-right = 1
+
+module-margin = 1
+
+font-0 = "Cantarell:size=14:weight=bold;2"
+font-1 = "Font Awesome:size=12;2"
+font-2 = "Material Icons:size=18;5"
+font-3 = "Fira Mono:size=11;-3"
+
+modules-left = exwm-workspace logo
+modules-right = cpu memory temperature battery date
+
+tray-position = right
+tray-padding = 2
+tray-maxsize = 28
+
+cursor-click = pointer
+cursor-scroll = ns-resize
+
+[module/exwm-workspace]
+type = custom/ipc
+hook-0 = emacsclient -e "exwm-workspace-current-index" | sed -e 's/^"//' -e 's/"$//'
+initial = 1
+format-padding = 1
+
+[module/cpu]
+type = internal/cpu
+interval = 2
+format = <label> <ramp-coreload>
+click-left = emacsclient -e "(proced)"
+label = %percentage:2%%
+ramp-coreload-spacing = 0
+ramp-coreload-0 = ▁
+ramp-coreload-0-foreground = ${colors.foreground-alt}
+ramp-coreload-1 = ▂
+ramp-coreload-2 = ▃
+ramp-coreload-3 = ▄
+ramp-coreload-4 = ▅
+ramp-coreload-5 = ▆
+ramp-coreload-6 = ▇
+
+[module/logo]
+type = custom/text
+content = λ
+
+[module/date]
+type = internal/date
+interval = 5
+
+date = "%a %b %e"
+date-alt = "%A %B %d %Y"
+
+time = %l:%M %p
+time-alt = %H:%M:%S
+
+format-prefix-foreground = ${colors.foreground-alt}
+
+label = %date% %time%
+
+[module/battery]
+type = internal/battery
+battery = BAT0
+adapter = ADP1
+full-at = 98
+time-format = %-l:%M
+
+label-charging = %percentage%% / %time%
+format-charging = <animation-charging> <label-charging>
+
+
+label-discharging = %percentage%% / %time%
+format-discharging = <ramp-capacity> <label-discharging>
+format-full = <ramp-capacity> <label-full>
+
+ramp-capacity-0 = 
+ramp-capacity-1 = 
+ramp-capacity-2 = 
+ramp-capacity-3 = 
+ramp-capacity-4 = 
+
+animation-charging-0 = 
+animation-charging-1 = 
+animation-charging-2 = 
+animation-charging-3 = 
+animation-charging-4 = 
+animation-charging-framerate = 750
+
+[module/memory]
+type = internal/memory
+interval = 5
+format-prefix = " "
+label = %gb_used%
+
+[module/temperature]
+type = internal/temperature
+thermal-zone = 0
+warn-temperature = 60
+
+format = <label>
+format-warn = <label-warn>
+format-warn-underline = ${self.format-underline}
+
+label = %temperature-c%
+label-warn = %temperature-c%!
+label-warn-foreground = ${colors.secondary}
+
+#+end_src
+
 
 Very simple polybar 
 
@@ -342,7 +499,7 @@ Very simple polybar
     (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
     (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch))
 
-  (defun efs/org-mode-setup ()
+  (defun vinid/org-mode-setup ()
     (org-indent-mode)
     (variable-pitch-mode 1)
     (visual-line-mode 1))
@@ -356,7 +513,7 @@ Very simple polybar
 #+begin_src emacs-lisp
 
   (use-package org
-    :hook (org-mode . efs/org-mode-setup)
+    :hook (org-mode . vinid/org-mode-setup)
     :config
     (setq org-ellipsis " ▾"))
 
@@ -385,6 +542,7 @@ Very simple polybar
 
 (setq org-agenda-files '("~/Dropbox/org/gtd/study.org"
                          "~/Dropbox/org/gtd/gtd.org"
+                         "~/Dropbox/org/gtd/habits.org"
 			 "~/org/research.org"))
 
 (setq org-capture-templates '(("t" "Todo [inbox]" entry
@@ -410,11 +568,19 @@ Very simple polybar
 
 (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
 
-
 #+end_src
 
 
 
+
+** Org Habits
+
+#+begin_src emacs-lisp
+
+ (require 'org-habit)
+ (add-to-list 'org-modules 'org-habit)
+
+#+end_src 
 
 
 * Org Babel   
@@ -498,7 +664,7 @@ Setting up a command that opens grammarly on the web and at the same time copies
 "A function to open a new grammarly document"
   (interactive)
   (progn  
-       (copy-region-as-kill (region-beginning) (region-end))
+       (if mark-active (copy-region-as-kill (region-beginning) (region-end)) nil)
        (browse-url "https://app.grammarly.com/docs/new")))
 
 (global-set-key (kbd "C-c C-g") #'open-grammarly-with-kill)
