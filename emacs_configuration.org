@@ -594,12 +594,14 @@ Custom view to personalize the org-mode experience
 
   (setq org-agenda-span 'day)
 
-   (setq org-todo-keyword-faces
-         (quote (("TODO" :foreground "red" :weight bold)
-                 ("PROG" :foreground "yellow" :weight bold)
-                 ("WAIT" :foreground "blue" :weight bold)
-	               ("INTR" :foreground "white" :weight bold)
-                 ("DONE" :foreground "forest green" :weight bold))))
+
+  (setq org-todo-keyword-faces
+        (quote (("TODO" :foreground "red" :weight bold)
+                ("PROG" :foreground "yellow" :weight bold)
+                ("WAIT" :foreground "blue" :weight bold)
+                ("NEXT" :foreground "orange" :weight bold)
+                ("INTR" :foreground "pink" :weight bold)
+                ("DONE" :foreground "forest green" :weight bold))))
 
    (setq org-treat-S-cursor-todo-selection-as-state-change nil)
 
@@ -759,3 +761,5 @@ buffer-substring
 * Reference
 
 This configuration is built around the one provided by David Wilson in his stream [[https://github.com/daviwil/emacs-from-scratch/blob/master/Emacs.org][Emacs From Scratch]]
+
+The org-mode configuration comes from different places but most of it comes from [[https://whhone.com/posts/org-mode-task-management/][Wai Hon's Blog]].

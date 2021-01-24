@@ -326,12 +326,14 @@
 
 (setq org-agenda-span 'day)
 
- (setq org-todo-keyword-faces
-       (quote (("TODO" :foreground "red" :weight bold)
-               ("PROG" :foreground "yellow" :weight bold)
-               ("WAIT" :foreground "blue" :weight bold)
-	             ("INTR" :foreground "white" :weight bold)
-               ("DONE" :foreground "forest green" :weight bold))))
+
+(setq org-todo-keyword-faces
+      (quote (("TODO" :foreground "red" :weight bold)
+              ("PROG" :foreground "yellow" :weight bold)
+              ("WAIT" :foreground "blue" :weight bold)
+              ("NEXT" :foreground "orange" :weight bold)
+              ("INTR" :foreground "pink" :weight bold)
+              ("DONE" :foreground "forest green" :weight bold))))
 
  (setq org-treat-S-cursor-todo-selection-as-state-change nil)
 
