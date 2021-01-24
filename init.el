@@ -22,11 +22,11 @@
 (require 'use-package)
 (setq use-package-always-ensure t)
 
-(defvar vinid/default-font-size 180)
-(defvar vinid/default-variable-font-size 180)
+(defvar vinid/default-font-size 120)
+(defvar vinid/default-variable-font-size 120)
 
 ;; Make frame transparency overridable
-(defvar efs/frame-transparency '(90 . 90))
+(defvar vinid/frame-transparency '(90 . 90))
 
 (set-face-attribute 'default nil :font "Fira Code Retina" :height vinid/default-font-size)
 
@@ -50,8 +50,8 @@
 
 (global-display-line-numbers-mode t)
 
-(set-frame-parameter (selected-frame) 'alpha efs/frame-transparency)
-(add-to-list 'default-frame-alist `(alpha . ,efs/frame-transparency))
+(set-frame-parameter (selected-frame) 'alpha vinid/frame-transparency)
+(add-to-list 'default-frame-alist `(alpha . ,vinid/frame-transparency))
 
 (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
 (add-to-list 'default-frame-alist '(fullscreen . maximized))
@@ -116,6 +116,8 @@
        (lambda ()
           (concat "[" (getenv "USER") 
            (eshell/pwd) (if (= (user-uid) 0) " # " " λ "))))
+
+(use-package haskell-mode)
 
 ;; Load EXWM.
 (require 'exwm)
@@ -213,34 +215,34 @@
 ;; ready.  You can put it _anywhere_ in your configuration.
 (exwm-enable)
 
-(defvar efs/polybar-process nil
+(defvar vinid/polybar-process nil
   "Holds the process of the running Polybar instance, if any")
 
-(defun efs/kill-panel ()
+(defun vinid/kill-panel ()
   (interactive)
-  (when efs/polybar-process
+  (when vinid/polybar-process
     (ignore-errors
-      (kill-process efs/polybar-process)))
-  (setq efs/polybar-process nil))
+      (kill-process vinid/polybar-process)))
+  (setq vinid/polybar-process nil))
 
-(defun efs/start-panel ()
+(defun vinid/start-panel ()
   (interactive)
-  (efs/kill-panel)
-  (setq efs/polybar-process (start-process-shell-command "polybar" nil "polybar panel")))
+  (vinid/kill-panel)
+  (setq vinid/polybar-process (start-process-shell-command "polybar" nil "polybar panel")))
 
-(defun efs/send-polybar-hook (module-name hook-index)
+(defun vinid/send-polybar-hook (module-name hook-index)
   (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook %s %s" module-name hook-index)))
 
-(defun efs/send-polybar-exwm-workspace ()
-  (efs/send-polybar-hook "exwm-workspace" 1))
+(defun vinid/send-polybar-exwm-workspace ()
+  (vinid/send-polybar-hook "exwm-workspace" 1))
 
 ;; Update panel indicator when workspace changes
-(add-hook 'exwm-workspace-switch-hook #'efs/send-polybar-exwm-workspace)
-(efs/start-panel)
+(add-hook 'exwm-workspace-switch-hook #'vinid/send-polybar-exwm-workspace)
+(vinid/start-panel)
 
 (setq exwm-workspace-number 4)
 
-(defun efs/org-font-setup ()
+(defun vinid/org-font-setup ()
   ;; Replace list hyphen with dot
   (font-lock-add-keywords 'org-mode
                           '(("^ *\\([-]\\) "
@@ -272,60 +274,77 @@
   (visual-line-mode 1))
 
 (use-package org
-    :hook (org-mode . vinid/org-mode-setup)
-    :config
-    (setq org-ellipsis " ▾"))
+      :hook (org-mode . vinid/org-mode-setup)
+      :config
+      (setq org-ellipsis " ▾"))
 
-    (setq org-agenda-start-with-log-mode t)
-    (setq org-log-done 'time)
-    (setq org-log-into-drawer t)
+  (setq org-agenda-start-with-log-mode t)
 
-  (require 'org-indent)
+  (setq org-log-done 'time)
 
+  (setq org-log-into-drawer t)
 
   (use-package org-bullets
-    :after org
-    :hook (org-mode . org-bullets-mode)
-    :custom
-    (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+      :after org
+      :hook (org-mode . org-bullets-mode)
+      :custom
+      (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+
 
 (use-package org-journal)
 
+(setq org-src-tab-acts-natively t)
 (setq org-journal-dir "~/Dropbox/org/journal/")
 (setq org-log-done t)
 
-(define-key global-map "\C-ca" 'org-agenda)
-(define-key global-map "\C-cl" 'org-store-link)
-(global-set-key (kbd "C-c c") 'org-capture)
 
 
-(setq org-agenda-files '("~/Dropbox/org/gtd/study.org"
-                         "~/Dropbox/org/gtd/gtd.org"
-                         "~/Dropbox/org/gtd/habits.org"
-			 "~/org/research.org"))
+  (define-key global-map "\C-ca" 'org-agenda)
+  (define-key global-map "\C-cl" 'org-store-link)
+  (global-set-key (kbd "C-c c") 'org-capture)
 
-(setq org-capture-templates '(("t" "Todo [inbox]" entry
-                               (file+headline "~/Dropbox/org/gtd/gtd.org" "Tasks")
-                               "* TODO %i%?")))
 
-(setq org-refile-targets
-  '(("~/Dropbox/org/gtd/archive.org" :maxlevel . 1)))
+  (setq org-agenda-files '(
+                           "~/Dropbox/org/gtd/study.org"
+                           "~/Dropbox/org/gtd/gtd.org"
+                           "~/Dropbox/org/gtd/habits.org"
+                           "~/org/research.org"))
 
-;; Save Org buffers after refiling!
-(advice-add 'org-refile :after 'org-save-all-org-buffers)
+  (setq org-capture-templates '(("t" "Todo [inbox]" entry
+                                 (file+headline "~/Dropbox/org/gtd/gtd.org" "Tasks")
+                                 "* TODO %i%?")))
+
+  (setq org-refile-targets
+    '(("~/Dropbox/org/gtd/gtd.org" :maxlevel . 3)
+      ("~/Dropbox/org/gtd/archive.org" :maxlevel . 1)))
+
+  ;; Save Org buffers after refiling!
+  (advice-add 'org-refile :after 'org-save-all-org-buffers)
 
 (setq org-todo-keywords
-      (quote ((sequence "TODO(t)" "PROG(p)" "WAIT(w)" "DONE(d)"))))
+     '((sequence "TODO(t)" "NEXT(n)" "PROG(p)" "INTR(i)" "DONE(d)")))
 
-(setq org-todo-keyword-faces
-      (quote (("TODO" :foreground "red" :weight bold)
-	      ("PROG" :foreground "yellow" :weight bold)
-     	      ("WAIT" :foreground "blue" :weight bold)
-              ("DONE" :foreground "forest green" :weight bold))))
+(setq org-agenda-span 'day)
 
-(setq org-treat-S-cursor-todo-selection-as-state-change nil)
+ (setq org-todo-keyword-faces
+       (quote (("TODO" :foreground "red" :weight bold)
+               ("PROG" :foreground "yellow" :weight bold)
+               ("WAIT" :foreground "blue" :weight bold)
+	             ("INTR" :foreground "white" :weight bold)
+               ("DONE" :foreground "forest green" :weight bold))))
 
-(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+ (setq org-treat-S-cursor-todo-selection-as-state-change nil)
+
+ (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+
+
+(setq org-agenda-custom-commands
+  '(("n" "Agenda / INTR / PROG / NEXT"
+     ((agenda "" nil)
+      (todo "INTR" nil)
+      (todo "PROG" nil)
+      (todo "NEXT" nil))
+     nil)))
 
 (require 'org-habit)
 (add-to-list 'org-modules 'org-habit)
@@ -342,14 +361,32 @@
 (push '("conf-unix" . conf-unix) org-src-lang-modes)
 
 ;; Automatically tangle our Emacs.org config file when we save it
-(defun efs/org-babel-tangle-config ()
+(defun vinid/org-babel-tangle-config ()
   (when (string-equal (buffer-file-name)
                       (expand-file-name "~/.emacs.d/emacs_configuration.org"))
     ;; Dynamic scoping to the rescue
     (let ((org-confirm-babel-evaluate nil))
       (org-babel-tangle))))
 
-(add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
+(add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'vinid/org-babel-tangle-config)))
+
+(use-package org-roam
+         :ensure t
+         :hook
+         (after-init . org-roam-mode)
+         :custom
+         (org-roam-directory "/home/vinid/roam")
+         :bind (:map org-roam-mode-map
+                 (("C-c n l" . org-roam)
+                  ("C-c n f" . org-roam-find-file)
+                  ("C-c n g" . org-roam-graph))
+                 :map org-mode-map
+                 (("C-c n i" . org-roam-insert))
+                 (("C-c n I" . org-roam-insert-immediate))))
+
+(add-to-list 'exec-path "/usr/bin/") ; probably not necessary
+
+(add-hook 'after-init-hook 'org-roam-mode)
 
 (defun search-google ()
 "A function that google a selected region, if any, alternatively asks for something to serach"
@@ -359,8 +396,6 @@
        (read-string "Serach String: ")))))
   (browse-url (concat "https://www.google.com/search?&q=" searchkey))))
 
-(global-set-key (kbd "C-c g") #'search-google)
-
 (defun open-grammarly-with-kill ()
 "A function to open a new grammarly document"
   (interactive)
@@ -368,4 +403,6 @@
        (if mark-active (copy-region-as-kill (region-beginning) (region-end)) nil)
        (browse-url "https://app.grammarly.com/docs/new")))
 
-(global-set-key (kbd "C-c C-g") #'open-grammarly-with-kill)
+(global-set-key (kbd "C-ò") 'delete-backward-char)
+(global-set-key (kbd "C-c g") #'search-google)
+(global-set-key (kbd "C-c r") #'open-grammarly-with-kill)
