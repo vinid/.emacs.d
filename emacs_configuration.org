@@ -97,8 +97,7 @@
 
 #+end_src
 
-
-** Usepful base packages
+** Useful base packages
 *** Ivy
 
  #+begin_src emacs-lisp
@@ -191,101 +190,101 @@ All the configuration params currently used in EXWM.
 
 #+begin_src emacs-lisp
 
-;; Load EXWM.
-(require 'exwm)
+  ;; Load EXWM.
+  (require 'exwm)
 
-;; Fix problems with Ido (if you use it).
-(require 'exwm-config)
-(exwm-config-ido)
+  ;; Fix problems with Ido (if you use it).
+  (require 'exwm-config)
+  (exwm-config-ido)
 
-;; starting the server
-(server-start)
+  ;; starting the server
+  (server-start)
 
-;; All buffers created in EXWM mode are named "*EXWM*". You may want to
-;; change it in `exwm-update-class-hook' and `exwm-update-title-hook', which
-;; are run when a new X window class name or title is available.  Here's
-;; some advice on this topic:
-;; + Always use `exwm-workspace-rename-buffer` to avoid naming conflict.
-;; + For applications with multiple windows (e.g. GIMP), the class names of
-;    all windows are probably the same.  Using window titles for them makes
-;;   more sense.
-;; In the following example, we use class names for all windows except for
-;; Java applications and GIMP.
-(add-hook 'exwm-update-class-hook
-          (lambda ()
-            (unless (or (string-prefix-p "sun-awt-X11-" exwm-instance-name)
+  ;; All buffers created in EXWM mode are named "*EXWM*". You may want to
+  ;; change it in `exwm-update-class-hook' and `exwm-update-title-hook', which
+  ;; are run when a new X window class name or title is available.  Here's
+  ;; some advice on this topic:
+  ;; + Always use `exwm-workspace-rename-buffer` to avoid naming conflict.
+  ;; + For applications with multiple windows (e.g. GIMP), the class names of
+  ;    all windows are probably the same.  Using window titles for them makes
+  ;;   more sense.
+  ;; In the following example, we use class names for all windows except for
+  ;; Java applications and GIMP.
+  (add-hook 'exwm-update-class-hook
+            (lambda ()
+              (unless (or (string-prefix-p "sun-awt-X11-" exwm-instance-name)
+                          (string= "gimp" exwm-instance-name))
+                (exwm-workspace-rename-buffer exwm-class-name))))
+  (add-hook 'exwm-update-title-hook
+            (lambda ()
+              (when (or (not exwm-instance-name)
+                        (string-prefix-p "sun-awt-X11-" exwm-instance-name)
                         (string= "gimp" exwm-instance-name))
-              (exwm-workspace-rename-buffer exwm-class-name))))
-(add-hook 'exwm-update-title-hook
-          (lambda ()
-            (when (or (not exwm-instance-name)
-                      (string-prefix-p "sun-awt-X11-" exwm-instance-name)
-                      (string= "gimp" exwm-instance-name))
-              (exwm-workspace-rename-buffer exwm-title))))
+                (exwm-workspace-rename-buffer exwm-title))))
 
-;; Global keybindings can be defined with `exwm-input-global-keys'.
-;; Here are a few examples:
-(setq exwm-input-global-keys
-      `(
-        ;; Bind "s-r" to exit char-mode and fullscreen mode.
-        ([?\s-r] . exwm-reset)
-        ;; Bind "s-w" to switch workspace interactively.
-        ([?\s-w] . exwm-workspace-switch)
-        ;; Bind "s-0" to "s-9" to switch to a workspace by its index.
-        ,@(mapcar (lambda (i)
-                    `(,(kbd (format "s-%d" i)) .
-                      (lambda ()
-                        (interactive)
-                        (exwm-workspace-switch-create ,i))))
-                  (number-sequence 0 9))
-        ;; Bind "s-&" to launch applications ('M-&' also works if the output
-        ;; buffer does not bother you).
-        ([?\s-&] . (lambda (command)
-		     (interactive (list (read-shell-command "λ ")))
-		     (start-process-shell-command command nil command)))
-        ;; Bind "s-<f2>" to "slock", a simple X display locker.
-        ([s-f2] . (lambda ()
-		    (interactive)
-		    (start-process "" nil "/usr/bin/slock")))))
+  ;; Global keybindings can be defined with `exwm-input-global-keys'.
+  ;; Here are a few examples:
+  (setq exwm-input-global-keys
+        `(
+          ;; Bind "s-r" to exit char-mode and fullscreen mode.
+          ([?\s-r] . exwm-reset)
+          ;; Bind "s-w" to switch workspace interactively.
+          ([?\s-w] . exwm-workspace-switch)
+          ;; Bind "s-0" to "s-9" to switch to a workspace by its index.
+          ,@(mapcar (lambda (i)
+                      `(,(kbd (format "s-%d" i)) .
+                        (lambda ()
+                          (interactive)
+                          (exwm-workspace-switch-create ,i))))
+                    (number-sequence 0 9))
+          ;; Bind "s-&" to launch applications ('M-&' also works if the output
+          ;; buffer does not bother you).
+          ([?\s-&] . (lambda (command)
+                       (interactive (list (read-shell-command "λ ")))
+                       (start-process-shell-command command nil command)))
+          ;; Bind "s-<f2>" to "slock", a simple X display locker.
+          ([s-f2] . (lambda ()
+                      (interactive)
+                      (start-process "" nil "/usr/bin/slock")))))
 
-;; To add a key binding only available in line-mode, simply define it in
-;; `exwm-mode-map'.  The following example shortens 'C-c q' to 'C-q'.
-(define-key exwm-mode-map [?\C-q] #'exwm-input-send-next-key)
+  ;; To add a key binding only available in line-mode, simply define it in
+  ;; `exwm-mode-map'.  The following example shortens 'C-c q' to 'C-q'.
+  (define-key exwm-mode-map [?\C-q] #'exwm-input-send-next-key)
 
-;; The following example demonstrates how to use simulation keys to mimic
-;; the behavior of Emacs.  The value of `exwm-input-simulation-keys` is a
-;; list of cons cells (SRC . DEST), where SRC is the key sequence you press
-;; and DEST is what EXWM actually sends to application.  Note that both SRC
-;; and DEST should be key sequences (vector or string).
-(setq exwm-input-simulation-keys
-      '(
-        ;; movement
-        ([?\C-b] . [left])
-        ([?\M-b] . [C-left])
-        ([?\C-f] . [right])
-        ([?\M-f] . [C-right])
-        ([?\C-p] . [up])
-        ([?\C-n] . [down])
-        ([?\C-a] . [home])
-        ([?\C-e] . [end])
-        ([?\M-v] . [prior])
-        ([?\C-v] . [next])
-        ([?\C-d] . [delete])
-        ([?\C-k] . [S-end delete])
-        ;; cut/paste.
-        ([?\C-w] . [?\C-x])
-        ([?\M-w] . [?\C-c])
-        ([?\C-y] . [?\C-v])
-        ;; search
-        ([?\C-s] . [?\C-f])))
+  ;; The following example demonstrates how to use simulation keys to mimic
+  ;; the behavior of Emacs.  The value of `exwm-input-simulation-keys` is a
+  ;; list of cons cells (SRC . DEST), where SRC is the key sequence you press
+  ;; and DEST is what EXWM actually sends to application.  Note that both SRC
+  ;; and DEST should be key sequences (vector or string).
+  (setq exwm-input-simulation-keys
+        '(
+          ;; movement
+          ([?\C-b] . [left])
+          ([?\M-b] . [C-left])
+          ([?\C-f] . [right])
+          ([?\M-f] . [C-right])
+          ([?\C-p] . [up])
+          ([?\C-n] . [down])
+          ([?\C-a] . [home])
+          ([?\C-e] . [end])
+          ([?\M-v] . [prior])
+          ([?\C-v] . [next])
+          ([?\C-d] . [delete])
+          ([?\C-k] . [S-end delete])
+          ;; cut/paste.
+          ([?\C-w] . [?\C-x])
+          ([?\M-w] . [?\C-c])
+          ([?\C-y] . [?\C-v])
+          ;; search
+          ([?\C-s] . [?\C-f])))
 
-;; You can hide the minibuffer and echo area when they're not used, by
-;; uncommenting the following line.
-;(setq exwm-workspace-minibuffer-position 'bottom)
+  ;; You can hide the minibuffer and echo area when they're not used, by
+  ;; uncommenting the following line.
+  ;(setq exwm-workspace-minibuffer-position 'bottom)
 
-;; Do not forget to enable EXWM. It will start by itself when things are
-;; ready.  You can put it _anywhere_ in your configuration.
-(exwm-enable)
+  ;; Do not forget to enable EXWM. It will start by itself when things are
+  ;; ready.  You can put it _anywhere_ in your configuration.
+  (exwm-enable)
 
 
 #+end_src
@@ -441,37 +440,36 @@ label-warn-foreground = ${colors.secondary}
 
 #+end_src
 
-
-Very simple polybar 
+Very simple polybar to have on top of the EXWM desktop environment
 
 #+begin_src emacs-lisp
 
-(defvar vinid/polybar-process nil
-  "Holds the process of the running Polybar instance, if any")
+  (defvar vinid/polybar-process nil
+    "Holds the process of the running Polybar instance, if any")
 
-(defun vinid/kill-panel ()
-  (interactive)
-  (when vinid/polybar-process
-    (ignore-errors
-      (kill-process vinid/polybar-process)))
-  (setq vinid/polybar-process nil))
+  (defun vinid/kill-panel ()
+    (interactive)
+    (when vinid/polybar-process
+      (ignore-errors
+        (kill-process vinid/polybar-process)))
+    (setq vinid/polybar-process nil))
 
-(defun vinid/start-panel ()
-  (interactive)
-  (vinid/kill-panel)
-  (setq vinid/polybar-process (start-process-shell-command "polybar" nil "polybar panel")))
+  (defun vinid/start-panel ()
+    (interactive)
+    (vinid/kill-panel)
+    (setq vinid/polybar-process (start-process-shell-command "polybar" nil "polybar panel")))
 
-(defun vinid/send-polybar-hook (module-name hook-index)
-  (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook %s %s" module-name hook-index)))
+  (defun vinid/send-polybar-hook (module-name hook-index)
+    (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook %s %s" module-name hook-index)))
 
-(defun vinid/send-polybar-exwm-workspace ()
-  (vinid/send-polybar-hook "exwm-workspace" 1))
+  (defun vinid/send-polybar-exwm-workspace ()
+    (vinid/send-polybar-hook "exwm-workspace" 1))
 
-;; Update panel indicator when workspace changes
-(add-hook 'exwm-workspace-switch-hook #'vinid/send-polybar-exwm-workspace)
-(vinid/start-panel)
+  ;; Update panel indicator when workspace changes
+  (add-hook 'exwm-workspace-switch-hook #'vinid/send-polybar-exwm-workspace)
+  (vinid/start-panel)
 
-(setq exwm-workspace-number 4)
+  (setq exwm-workspace-number 4)
 
 
 #+end_src 
@@ -570,7 +568,7 @@ Setting the main variables
                              "~/org/research.org"))
 
     (setq org-capture-templates '(("t" "Todo [inbox]" entry
-                                   (file+headline "~/Dropbox/org/gtd/gtd.org" "Tasks")
+                                   (file+headline "~/Dropbox/org/gtd/inbox.org" "Refiling")
                                    "* TODO %i%?")))
 
     (setq org-refile-targets
@@ -607,7 +605,6 @@ Custom view to personalize the org-mode experience
 
    (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
 
-
   (setq org-agenda-custom-commands
     '(("n" "Agenda / INTR / PROG / NEXT"
        ((agenda "" nil)
@@ -615,7 +612,6 @@ Custom view to personalize the org-mode experience
         (todo "PROG" nil)
         (todo "NEXT" nil))
        nil)))
-
 
 #+END_SRC
 
@@ -629,6 +625,8 @@ Custom view to personalize the org-mode experience
  (add-to-list 'org-modules 'org-habit)
 
 #+end_src 
+
+
 
 
 * Org Babel   
@@ -686,23 +684,34 @@ This snippet adds a hook to =org-mode= buffers so that =vinid/org-babel-tangle-c
 
 #+BEGIN_SRC emacs-lisp
 
-     (use-package org-roam
-           :ensure t
-           :hook
-           (after-init . org-roam-mode)
-           :custom
-           (org-roam-directory "/home/vinid/roam")
-           :bind (:map org-roam-mode-map
-                   (("C-c n l" . org-roam)
-                    ("C-c n f" . org-roam-find-file)
-                    ("C-c n g" . org-roam-graph))
-                   :map org-mode-map
-                   (("C-c n i" . org-roam-insert))
-                   (("C-c n I" . org-roam-insert-immediate))))
+           (use-package org-roam
+                 :ensure t
+                 :hook
+                 (after-init . org-roam-mode)
+                 :custom
+                 (org-roam-directory "/home/vinid/Dropbox/org/roam")
+                 :bind (:map org-roam-mode-map
+                         (("C-c n l" . org-roam)
+                          ("C-c n f" . org-roam-find-file)
+                          ("C-c n g" . org-roam-graph))
+                         :map org-mode-map
+                         (("C-c n i" . org-roam-insert))
+                         (("C-c n I" . org-roam-insert-immediate))))
 
-  (add-to-list 'exec-path "/usr/bin/") ; probably not necessary
+        (add-to-list 'exec-path "/usr/bin/") ; probably not necessary
 
-  (add-hook 'after-init-hook 'org-roam-mode)
+        (add-hook 'after-init-hook 'org-roam-mode)
+
+
+   (use-package org-ref)
+
+   (setq reftex-default-bibliography '("~/Dropbox/bibliography/references.bib"))
+
+  (setq org-ref-bibliography-notes "~/Dropbox/bibliography/notes.org"
+          org-ref-default-bibliography '("~/Dropbox/bibliography/references.bib")
+          org-ref-pdf-directory "~/Dropbox/bibliography/bibtex-pdfs/")
+
+
 
 #+END_SRC
 
@@ -740,8 +749,6 @@ Setting up a command that opens grammarly on the web and at the same time copies
        (if mark-active (copy-region-as-kill (region-beginning) (region-end)) nil)
        (browse-url "https://app.grammarly.com/docs/new")))
 
-
-
   #+end_src
 
 buffer-substring
@@ -762,4 +769,4 @@ buffer-substring
 
 This configuration is built around the one provided by David Wilson in his stream [[https://github.com/daviwil/emacs-from-scratch/blob/master/Emacs.org][Emacs From Scratch]]
 
-The org-mode configuration comes from different places but most of it comes from [[https://whhone.com/posts/org-mode-task-management/][Wai Hon's Blog]].
+The org-mode configuration comes from different places but most of it comes from [[https://whhone.com/posts/org-mode-task-management/][Wai Hon's Blog]] and from [[https://emacs.cafe/emacs/orgmode/gtd/2017/06/30/orgmode-gtd.html][Nicolas Petton's Blog]].

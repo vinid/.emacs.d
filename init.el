@@ -169,12 +169,12 @@
         ;; Bind "s-&" to launch applications ('M-&' also works if the output
         ;; buffer does not bother you).
         ([?\s-&] . (lambda (command)
-		     (interactive (list (read-shell-command "λ ")))
-		     (start-process-shell-command command nil command)))
+                     (interactive (list (read-shell-command "λ ")))
+                     (start-process-shell-command command nil command)))
         ;; Bind "s-<f2>" to "slock", a simple X display locker.
         ([s-f2] . (lambda ()
-		    (interactive)
-		    (start-process "" nil "/usr/bin/slock")))))
+                    (interactive)
+                    (start-process "" nil "/usr/bin/slock")))))
 
 ;; To add a key binding only available in line-mode, simply define it in
 ;; `exwm-mode-map'.  The following example shortens 'C-c q' to 'C-q'.
@@ -311,7 +311,7 @@
                            "~/org/research.org"))
 
   (setq org-capture-templates '(("t" "Todo [inbox]" entry
-                                 (file+headline "~/Dropbox/org/gtd/gtd.org" "Tasks")
+                                 (file+headline "~/Dropbox/org/gtd/inbox.org" "Refiling")
                                  "* TODO %i%?")))
 
   (setq org-refile-targets
@@ -338,7 +338,6 @@
  (setq org-treat-S-cursor-todo-selection-as-state-change nil)
 
  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
-
 
 (setq org-agenda-custom-commands
   '(("n" "Agenda / INTR / PROG / NEXT"
@@ -373,22 +372,31 @@
 (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'vinid/org-babel-tangle-config)))
 
 (use-package org-roam
-         :ensure t
-         :hook
-         (after-init . org-roam-mode)
-         :custom
-         (org-roam-directory "/home/vinid/roam")
-         :bind (:map org-roam-mode-map
-                 (("C-c n l" . org-roam)
-                  ("C-c n f" . org-roam-find-file)
-                  ("C-c n g" . org-roam-graph))
-                 :map org-mode-map
-                 (("C-c n i" . org-roam-insert))
-                 (("C-c n I" . org-roam-insert-immediate))))
+               :ensure t
+               :hook
+               (after-init . org-roam-mode)
+               :custom
+               (org-roam-directory "/home/vinid/Dropbox/org/roam")
+               :bind (:map org-roam-mode-map
+                       (("C-c n l" . org-roam)
+                        ("C-c n f" . org-roam-find-file)
+                        ("C-c n g" . org-roam-graph))
+                       :map org-mode-map
+                       (("C-c n i" . org-roam-insert))
+                       (("C-c n I" . org-roam-insert-immediate))))
 
-(add-to-list 'exec-path "/usr/bin/") ; probably not necessary
+      (add-to-list 'exec-path "/usr/bin/") ; probably not necessary
 
-(add-hook 'after-init-hook 'org-roam-mode)
+      (add-hook 'after-init-hook 'org-roam-mode)
+
+
+ (use-package org-ref)
+
+ (setq reftex-default-bibliography '("~/Dropbox/bibliography/references.bib"))
+
+(setq org-ref-bibliography-notes "~/Dropbox/bibliography/notes.org"
+        org-ref-default-bibliography '("~/Dropbox/bibliography/references.bib")
+        org-ref-pdf-directory "~/Dropbox/bibliography/bibtex-pdfs/")
 
 (defun search-google ()
 "A function that google a selected region, if any, alternatively asks for something to serach"
