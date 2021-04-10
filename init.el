@@ -12,6 +12,7 @@
                          ("elpa" . "https://elpa.gnu.org/packages/")))
 
 (package-initialize)
+
 (unless package-archive-contents
   (package-refresh-contents))
 
@@ -20,10 +21,11 @@
   (package-install 'use-package))
 
 (require 'use-package)
+
 (setq use-package-always-ensure t)
 
-(defvar vinid/default-font-size 120)
-(defvar vinid/default-variable-font-size 120)
+(defvar vinid/default-font-size 140)
+(defvar vinid/default-variable-font-size 140)
 
 ;; Make frame transparency overridable
 (defvar vinid/frame-transparency '(90 . 90))
@@ -38,6 +40,7 @@
 
 (use-package all-the-icons)
 
+(use-package spacegray-theme :defer t)
 (use-package doom-themes
   :init (load-theme 'doom-palenight t))
 
@@ -117,6 +120,15 @@
 (setq auto-save-file-name-transforms
       `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
 
+(defun vinid/org-mode-visual-fill ()
+  (setq visual-fill-column-width 110
+        visual-fill-column-center-text t)
+  (visual-fill-column-mode 1))
+
+(use-package visual-fill-column
+  :defer t
+  :hook (org-mode . vinid/org-mode-visual-fill))
+
 (defun vinid/configure-eshell ()
   ;; Save command history when commands are entered
   (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
@@ -147,6 +159,7 @@
 
   (eshell-git-prompt-use-theme 'powerline))
 
+;; making the eshell prompt starting with a lambda char
 (setq eshell-prompt-function
          (lambda ()
             (concat "[" (getenv "USER") "]"
@@ -154,106 +167,133 @@
 
 (use-package haskell-mode)
 
-;; Load EXWM.
-  (require 'exwm)
+(server-start)
 
-  ;; Fix problems with Ido (if you use it).
-  (require 'exwm-config)
-  (exwm-config-ido)
+(defun vinid/exwm-init-hook ()
+  ;; Make workspace 1 be the one where we land at startup
+  (exwm-workspace-switch-create 1))
 
-  ;; starting the server
-  (server-start)
 
-  ;; All buffers created in EXWM mode are named "*EXWM*". You may want to
-  ;; change it in `exwm-update-class-hook' and `exwm-update-title-hook', which
-  ;; are run when a new X window class name or title is available.  Here's
-  ;; some advice on this topic:
-  ;; + Always use `exwm-workspace-rename-buffer` to avoid naming conflict.
-  ;; + For applications with multiple windows (e.g. GIMP), the class names of
-  ;    all windows are probably the same.  Using window titles for them makes
-  ;;   more sense.
-  ;; In the following example, we use class names for all windows except for
-  ;; Java applications and GIMP.
-  (add-hook 'exwm-update-class-hook
-            (lambda ()
-              (unless (or (string-prefix-p "sun-awt-X11-" exwm-instance-name)
-                          (string= "gimp" exwm-instance-name))
-                (exwm-workspace-rename-buffer exwm-class-name))))
+(defun vinid/exwm-update-class ()
+  (exwm-workspace-rename-buffer exwm-class-name))
 
-;; defines a function that makes a nicer visualization for the firefox tab
-(defun vinid/exwm-update-title ()
-  (pcase exwm-class-name
-    ("Firefox" (exwm-workspace-rename-buffer (format "Firefox: %s" exwm-title)))))
+	 ;; defines a function that makes a nicer visualization for the firefox tab
+	 (defun vinid/exwm-update-title ()
+	   (pcase exwm-class-name
+	     ("Firefox" (exwm-workspace-rename-buffer (format "Firefox: %s" exwm-title)))))
 
-  ;; When window title updates, use it to set the buffer name
-  (add-hook 'exwm-update-title-hook #'vinid/exwm-update-title)
 
-  ;; Global keybindings can be defined with `exwm-input-global-keys'.
-  ;; Here are a few examples:
-  (setq exwm-input-global-keys
-        `(
-          ;; Bind "s-r" to exit char-mode and fullscreen mode.
-          ([?\s-r] . exwm-reset)
-          ;; Bind "s-w" to switch workspace interactively.
-          ([?\s-w] . exwm-workspace-switch)
-          ;; Bind "s-0" to "s-9" to switch to a workspace by its index.
-          ,@(mapcar (lambda (i)
-                      `(,(kbd (format "s-%d" i)) .
-                        (lambda ()
-                          (interactive)
-                          (exwm-workspace-switch-create ,i))))
-                    (number-sequence 0 9))
-          ;; Bind "s-&" to launch applications ('M-&' also works if the output
-          ;; buffer does not bother you).
-          ([?\s-&] . (lambda (command)
-                       (interactive (list (read-shell-command "λ ")))
-                       (start-process-shell-command command nil command)))
-          ;; Bind "s-<f2>" to "slock", a simple X display locker.
-          ([s-f2] . (lambda ()
-                      (interactive)
-                      (start-process "" nil "/usr/bin/slock")))))
+       (defun vinid/set-wallpaper ()
+	 (interactive)
+	 ;; NOTE: You will need to update this to a valid background path!
+	 (start-process-shell-command
+	     "feh" nil  "feh --bg-scale /home/vinid/Pictures/Wallpapers/forest.jpg"))
 
-  ;; To add a key binding only available in line-mode, simply define it in
-  ;; `exwm-mode-map'.  The following example shortens 'C-c q' to 'C-q'.
-  (define-key exwm-mode-map [?\C-q] #'exwm-input-send-next-key)
+   (use-package exwm
+     :config
+     ;; Set the default number of workspaces
+     (setq exwm-workspace-number 5)
+
+     ;; When window "class" updates, use it to set the buffer name
+     (add-hook 'exwm-update-class-hook #'vinid/exwm-update-class)
+
+     ;; When EXWM starts up, do some extra confifuration
+     (add-hook 'exwm-init-hook #'vinid/exwm-init-hook)
+
+	(setq mouse-autoselect-window nil
+	      focus-follows-mouse nil)
+
+	  ;; When window title updates, use it to set the buffer name
+
+	(add-hook 'exwm-update-title-hook #'vinid/exwm-update-title)
+	  ;; To add a key binding only available in line-mode, simply define it in
+	  ;; `exwm-mode-map'.  The following example shortens 'C-c q' to 'C-q'.
+	  (define-key exwm-mode-map [?\C-q] #'exwm-input-send-next-key)
+
+	  ;; adding a way to run apps
+
+	  (exwm-input-set-key (kbd "s-SPC") 'counsel-linux-app)
+	  (exwm-input-set-key (kbd "s-f") 'exwm-layout-toggle-fullscreen)
+
+     ;; Set the wallpaper after changing the resolution
+     (vinid/set-wallpaper)
+
+     ;; These keys should always pass through to Emacs
+     (setq exwm-input-prefix-keys
+       '(?\C-x
+	 ?\C-u
+	 ?\C-h
+	 ?\M-x
+	 ?\M-`
+	 ?\M-&
+	 ?\M-:
+	 ?\C-\M-j  ;; Buffer list
+	 ?\C-\ ))  ;; Ctrl+Space
+
+     ;; Ctrl+Q will enable the next key to be sent directly
+     (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
 
   ;; The following example demonstrates how to use simulation keys to mimic
-  ;; the behavior of Emacs.  The value of `exwm-input-simulation-keys` is a
-  ;; list of cons cells (SRC . DEST), where SRC is the key sequence you press
-  ;; and DEST is what EXWM actually sends to application.  Note that both SRC
-  ;; and DEST should be key sequences (vector or string).
-  (setq exwm-input-simulation-keys
-        '(
-          ;; movement
-          ([?\C-b] . [left])
-          ([?\M-b] . [C-left])
-          ([?\C-f] . [right])
-          ([?\M-f] . [C-right])
-          ([?\C-p] . [up])
-          ([?\C-n] . [down])
-          ([?\C-a] . [home])
-          ([?\C-e] . [end])
-          ([?\M-v] . [prior])
-          ([?\C-v] . [next])
-          ([?\C-d] . [delete])
-          ([?\M-d] . [C-S-right delete])
-          ([?\C-k] . [S-end delete])
-          ;; cut paste
-          ([?\C-w] . [?\C-x])
-          ([?\M-w] . [?\C-c])
-          ([?\C-y] . [?\C-v])
-          ;; search
-          ([?\C-s] . [?\C-f])))
+	 ;; the behavior of Emacs.  The value of `exwm-input-simulation-keys` is a
+	 ;; list of cons cells (SRC . DEST), where SRC is the key sequence you press
+	 ;; and DEST is what EXWM actually sends to application.  Note that both SRC
+	 ;; and DEST should be key sequences (vector or string).
+	 (setq exwm-input-simulation-keys
+	       '(
+		 ;; movement
+		 ([?\C-b] . [left])
+		 ([?\M-b] . [C-left])
+		 ([?\C-f] . [right])
+		 ([?\M-f] . [C-right])
+		 ([?\C-p] . [up])
+		 ([?\C-n] . [down])
+		 ([?\C-a] . [home])
+		 ([?\C-e] . [end])
+		 ([?\M-v] . [prior])
+		 ([?\C-v] . [next])
+		 ([?\C-d] . [delete])
+		 ([?\M-d] . [C-S-right delete])
+		 ([?\C-k] . [S-end delete])
+		 ;; cut paste
+		 ([?\C-w] . [?\C-x])
+		 ([?\M-w] . [?\C-c])
+		 ([?\C-y] . [?\C-v])
+		 ;; search
+		 ([?\C-s] . [?\C-f])))
 
+     ;; Set up global key bindings.  These always work, no matter the input state!
+     ;; Keep in mind that changing this list after EXWM initializes has no effect.
+     (setq exwm-input-global-keys
+	   `(
+	     ;; Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
+	     ([?\s-r] . exwm-reset)
 
-  ;; adding a way to run apps
+	     ;; Move between windows
+	     ([s-left] . windmove-left)
+	     ([s-right] . windmove-right)
+	     ([s-up] . windmove-up)
+	     ([s-down] . windmove-down)
 
-  (exwm-input-set-key (kbd "s-SPC") 'counsel-linux-app)
-  (exwm-input-set-key (kbd "s-f") 'exwm-layout-toggle-fullscreen)
+	     ;; Launch applications via shell command
+	     ([?\s-&] . (lambda (command)
+			  (interactive (list (read-shell-command "$ ")))
+			  (start-process-shell-command command nil command)))
 
-  ;; Do not forget to enable EXWM. It will start by itself when things are
-  ;; ready.  You can put it _anywhere_ in your configuration.
-  (exwm-enable)
+	     ;; Switch workspace
+	     ([?\s-w] . exwm-workspace-switch)
+	     ([?\s-`] . (lambda () (interactive) (exwm-workspace-switch-create 0)))
+
+	     ;; 's-N': Switch to certain workspace with Super (Win) plus a number key (0 - 9)
+	     ,@(mapcar (lambda (i)
+			 `(,(kbd (format "s-%d" i)) .
+			   (lambda ()
+			     (interactive)
+			     (exwm-workspace-switch-create ,i))))
+		       (number-sequence 0 9))))
+
+     (exwm-input-set-key (kbd "s-SPC") 'counsel-linux-app)
+
+     (exwm-enable))
 
 (defun vinid/run-in-background (command)
    (let ((command-parts (split-string command "[ ]+")))
@@ -262,8 +302,8 @@
 (vinid/run-in-background "dunst")
 
 (defun vinid/disable-desktop-notifications ()
-  (interactive)
-  (start-process-shell-command "notify-send" nil "notify-send \"DUNST_COMMAND_PAUSE\""))ter
+  (interactive) 
+  (start-process-shell-command "notify-send" nil "notify-send \"DUNST_COMMAND_PAUSE\""))
 
 (defun vinid/enable-desktop-notifications ()
   (interactive)
@@ -301,52 +341,54 @@
 (setq exwm-workspace-number 4)
 
 (defun vinid/org-font-setup ()
-  ;; Replace list hyphen with dot
-  (font-lock-add-keywords 'org-mode
-                          '(("^ *\\([-]\\) "
-                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+    ;; Replace list hyphen with dot
+    (font-lock-add-keywords 'org-mode
+                            '(("^ *\\([-]\\) "
+                               (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
 
-  ;; Set faces for heading levels
-  (dolist (face '((org-level-1 . 1.2)
-                  (org-level-2 . 1.1)
-                  (org-level-3 . 1.05)
-                  (org-level-4 . 1.0)
-                  (org-level-5 . 1.1)
-                  (org-level-6 . 1.1)
-                  (org-level-7 . 1.1)
-                  (org-level-8 . 1.1)))
-    (set-face-attribute (car face) nil :font "Cantarell" :weight 'regular :height (cdr face)))
+    ;; Set faces for heading levels
+    (dolist (face '((org-level-1 . 1.2)
+                    (org-level-2 . 1.1)
+                    (org-level-3 . 1.05)
+                    (org-level-4 . 1.0)
+                    (org-level-5 . 1.1)
+                    (org-level-6 . 1.1)
+                    (org-level-7 . 1.1)
+                    (org-level-8 . 1.1)))
+      (set-face-attribute (car face) nil :font "Cantarell" :weight 'regular :height (cdr face)))
 
-  ;; Ensure that anything that should be fixed-pitch in Org files appears that way
-  (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
-  (set-face-attribute 'org-code nil   :inherit '(shadow fixed-pitch))
-  (set-face-attribute 'org-table nil   :inherit '(shadow fixed-pitch))
-  (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
-  (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
-  (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
-  (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch))
+    ;; Ensure that anything that should be fixed-pitch in Org files appears that way
+    (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
+    (set-face-attribute 'org-code nil   :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-table nil   :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+    (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+    (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+    (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch))
 
-(defun vinid/org-mode-setup ()
-  (org-indent-mode)
-  (variable-pitch-mode 1)
-  (visual-line-mode 1))
+  (defun vinid/org-mode-setup ()
+    (org-indent-mode)
+    (variable-pitch-mode 1)
+    (visual-line-mode 1))
+
+(set-fringe-mode 0)
 
 (use-package org
-      :hook (org-mode . vinid/org-mode-setup)
-      :config
-      (setq org-ellipsis " ▾"))
+  :hook (org-mode . vinid/org-mode-setup)
+  :config
+  (setq org-ellipsis " ▾"))
 
-  (setq org-agenda-start-with-log-mode t)
+(setq org-agenda-start-with-log-mode t)
 
-  (setq org-log-done 'time)
+(setq org-log-done 'time)
 
-  (setq org-log-into-drawer t)
+ (setq org-log-into-drawer t)
 
-  (use-package org-bullets
-      :after org
-      :hook (org-mode . org-bullets-mode)
-      :custom
-      (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+(use-package org-bullets
+  :after org
+  :hook (org-mode . org-bullets-mode)
+  :custom
+  (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
 
 
 (use-package org-journal)
@@ -429,25 +471,24 @@
 (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'vinid/org-babel-tangle-config)))
 
 (use-package org-roam
-               :ensure t
-               :hook
-               (after-init . org-roam-mode)
-               :custom
-               (org-roam-directory "/home/vinid/Dropbox/org/roam")
-               :bind (:map org-roam-mode-map
-                       (("C-c n l" . org-roam)
-                        ("C-c n f" . org-roam-find-file)
-                        ("C-c n g" . org-roam-graph))
-                       :map org-mode-map
-                       (("C-c n i" . org-roam-insert))
-                       (("C-c n I" . org-roam-insert-immediate))))
+         :ensure t
+         :hook
+         (after-init . org-roam-mode)
+         :custom
+         (org-roam-directory "/home/vinid/Dropbox/org/roam")
+         :bind (:map org-roam-mode-map
+                 (("C-c n l" . org-roam)
+                  ("C-c n f" . org-roam-find-file)
+                  ("C-c n g" . org-roam-graph))
+                 :map org-mode-map
+                 (("C-c n i" . org-roam-insert))
+                 (("C-c n I" . org-roam-insert-immediate))))
 
-      (add-to-list 'exec-path "/usr/bin/") ; probably not necessary
+(add-to-list 'exec-path "/usr/bin/") ; probably not necessary
 
-      (add-hook 'after-init-hook 'org-roam-mode)
+(add-hook 'after-init-hook 'org-roam-mode)
 
-
- (use-package org-ref)
+(use-package org-ref)
 
  (setq reftex-default-bibliography '("~/Dropbox/bibliography/references.bib"))
 
@@ -490,4 +531,4 @@
  (global-set-key (kbd "C-c g") #'search-google)
  (global-set-key (kbd "C-c r") #'open-grammarly-with-kill)
 
- (bind-key (kbd "C-ò") 'delete-backward-char)
+ (global-set-key (kbd "C-ò") 'delete-backward-char)
