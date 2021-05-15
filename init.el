@@ -129,6 +129,26 @@
   :defer t
   :hook (org-mode . vinid/org-mode-visual-fill))
 
+(use-package dired
+  :ensure nil
+  :commands (dired dired-jump)
+  :bind (("C-x C-j" . dired-jump))
+  :custom ((dired-listing-switches "-agho --group-directories-first")))
+
+(use-package dired-single)
+
+(use-package all-the-icons-dired
+  :hook (dired-mode . all-the-icons-dired-mode))
+
+(use-package dired-hide-dotfiles
+  :hook (dired-mode . dired-hide-dotfiles-mode)
+  :config
+  (bind-key   "H" 'dired-hide-dotfiles-mode))
+
+(use-package ledger-mode
+  :ensure t 
+  :mode ".ldg")
+
 (defun vinid/configure-eshell ()
   ;; Save command history when commands are entered
   (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
@@ -299,6 +319,8 @@
    (let ((command-parts (split-string command "[ ]+")))
      (apply #'call-process `(,(car command-parts) nil 0 nil ,@(cdr command-parts)))))
 
+(vinid/run-in-background "dropbox start")
+
 (vinid/run-in-background "dunst")
 
 (defun vinid/disable-desktop-notifications ()
@@ -396,7 +418,7 @@
 (setq org-src-tab-acts-natively t)
 (setq org-journal-dir "~/Dropbox/org/journal/")
 (setq org-log-done t)
-
+(setq org-journal-file-type 'weekly)
 
 
   (define-key global-map "\C-ca" 'org-agenda)
@@ -527,8 +549,6 @@
   (global-set-key (kbd "C-c e g") 'vinid/gtd-file)
   (global-set-key (kbd "C-c e r") 'vinid/inbox-file)
 
-;  (global-set-key (kbd "C-ò") 'delete-backward-char)
- (global-set-key (kbd "C-c g") #'search-google)
- (global-set-key (kbd "C-c r") #'open-grammarly-with-kill)
-
- (global-set-key (kbd "C-ò") 'delete-backward-char)
+(global-set-key (kbd "C-c g") #'search-google)
+(global-set-key (kbd "C-c r") #'open-grammarly-with-kill)
+(global-set-key (kbd "C-ò") 'delete-backward-char)

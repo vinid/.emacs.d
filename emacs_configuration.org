@@ -15,15 +15,17 @@ This symbolic link is used to connect the local desktop configuration with the o
 
 #+end_src
 
-Desktop entry for EXWM, runs the bash script
+
+
+  Desktop entry for EXWM, runs the bash script
 
 #+begin_src shell :tangle ./exwm/EXWM.desktop :mkdirp yes
-[Desktop Entry]
-Name=EXWM
-Comment=Emacs Window Manager
-Exec=sh /home/vinid/.emacs.d/exwm/start-exwm.sh
-TryExec=sh
-Type=Application
+  [Desktop Entry]
+  Name=EXWM
+  Comment=Emacs Window Manager
+  Exec=sh /home/vinid/.emacs.d/exwm/start-exwm.sh
+  TryExec=sh
+  Type=Application
 #+end_src
 
 Bash script that initialize EXWM
@@ -237,6 +239,52 @@ Setting up the package repositories
 
 #+end_src
 
+*  Programs
+** Dired
+
+#+begin_src emacs-lisp
+
+  (use-package dired
+    :ensure nil
+    :commands (dired dired-jump)
+    :bind (("C-x C-j" . dired-jump))
+    :custom ((dired-listing-switches "-agho --group-directories-first")))
+
+  (use-package dired-single)
+
+  (use-package all-the-icons-dired
+    :hook (dired-mode . all-the-icons-dired-mode))
+
+  (use-package dired-hide-dotfiles
+    :hook (dired-mode . dired-hide-dotfiles-mode)
+    :config
+    (bind-key   "H" 'dired-hide-dotfiles-mode))
+
+#+end_src
+
+** Ledger
+
+#+begin_src emacs-lisp
+
+  (use-package ledger-mode
+    :ensure t 
+    :mode ".ldg")
+
+
+#+end_src
+
+
+** GPG
+
+Not sure why, but without this GPG takes a long time to call the prompt for the passwords (seems to be a known bug)
+
+#+begin_src shell :tangle ~/.gnupg/gpg-agent.conf :makdirp yes
+
+no-allow-external-cache
+
+#+end_src
+
+
 * Eshell
 
 #+begin_src emacs-lisp
@@ -279,6 +327,7 @@ Setting up the package repositories
 
 
 #+end_src
+
 
 
 * Prgramming
@@ -438,6 +487,13 @@ All the configuration params currently used in EXWM.
 
 #+end_src
 
+** Dropbox
+
+#+begin_src emacs-lisp
+
+(vinid/run-in-background "dropbox start")
+
+#+end_src
 
 ** Dunst
 
@@ -946,7 +1002,7 @@ Setting the main variables
   (setq org-src-tab-acts-natively t)
   (setq org-journal-dir "~/Dropbox/org/journal/")
   (setq org-log-done t)
-
+  (setq org-journal-file-type 'weekly)
 
 
     (define-key global-map "\C-ca" 'org-agenda)
@@ -1099,6 +1155,7 @@ Configuring org roam for note taking
 
 #+end_src
 
+
 * Org-Ref
 
 Org ref allows an easier managment of the citations
@@ -1179,14 +1236,13 @@ buffer-substring
 
 #+end_src
 
-* Keybindings
+
+* Weird Personal Keybindings
 
 #+begin_src emacs-lisp
 
-  ;  (global-set-key (kbd "C-ò") 'delete-backward-char)
    (global-set-key (kbd "C-c g") #'search-google)
    (global-set-key (kbd "C-c r") #'open-grammarly-with-kill)
-
    (global-set-key (kbd "C-ò") 'delete-backward-char)
 
 #+end_src
