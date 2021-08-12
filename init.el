@@ -4,6 +4,10 @@
 (setq inhibit-startup-screen t)
 (setq visible-bell t)
 
+(setq clean-buffer-list-delay-special (* 1 3600))
+(setq clean-buffer-list-delay-general 1)
+(global-set-key (kbd "C-c e b") 'clean-buffer-list)
+
 ;; Initialize package sources
 (require 'package)
 
@@ -149,6 +153,68 @@
   :ensure t 
   :mode ".ldg")
 
+;;    (add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
+
+;	 (use-package mu4e
+;	   :ensure nil
+;	   :load-path "/usr/share/emacs/site-lisp/mu4e/"
+;	   :defer 20 ; Wait until 20 seconds after startup
+;	   :config
+
+           ;; This is set to 't' to avoid mail syncing issues when using mbsync
+;	   (setq mu4e-change-filenames-when-moving t)
+
+           ;; Refresh mail using isync every 10 minutes
+;	   (setq mu4e-update-interval (* 1000 60))
+;	   (setq mu4e-get-mail-command "mbsync -a")
+;	   (setq mu4e-maildir "~/Mail")
+
+;	   (setq mu4e-drafts-folder "/[Gmail]/.Drafts")
+;	   (setq mu4e-sent-folder   "/[Gmail]/.Sent Mail")
+;	   (setq mu4e-refile-folder "/[Gmail]/.All Mail")
+;	   (setq mu4e-trash-folder  "/[Gmail]/.Trash")
+
+
+ ; (setq message-send-mail-function 'smtpmail-send-it)
+        ; (setq mu4e-maildir-shortcuts
+;	 '(("/Inbox"             . ?i)
+;	   ("/[Gmail]/.Sent Mail" . ?s)
+;	   ("/[Gmail]/.Trash"     . ?t)
+;	   ("/[Gmail]/.Drafts"    . ?d)
+
+;	   ("/[Gmail]/.All Mail"  . ?a))))
+
+
+;  (setq mu4e-contexts
+;	(list
+         ;; Work account
+;	 (make-mu4e-context
+;	  :name "Work"
+;	  :match-func
+;	    (lambda (msg)
+;	      (when msg
+;		(string-prefix-p "/Gmail" (mu4e-message-field msg :maildir))))
+;	  :vars '((user-mail-address . "chiccobia@gmail.com")
+;		  (user-full-name    . "Federico Bianchi")
+;		  (smtpmail-smtp-server  . "smtp.gmail.com")
+;		  (smtpmail-smtp-service . 465)
+;		  (smtpmail-stream-type  . ssl)
+;		  (mu4e-drafts-folder  . "/Gmail/[Gmail]/Drafts")
+;(mu4e-sent-folder  . "/Gmail/[Gmail]/Sent Mail")
+ ;                 (mu4e-refile-folder  . "/Gmail/[Gmail]/All Mail")
+  ;                (mu4e-trash-folder  . "/Gmail/[Gmail]/Trash")))))
+
+
+  ; (setq epa-file-cache-passphrase-for-symmetric-encryption t)
+
+ ;    (mu4e t)
+
+(use-package perspective
+:ensure t  ; use `:straight t` if using straight.el!
+:bind (("C-x k" . persp-kill-buffer*))
+:init
+(persp-mode))
+
 (defun vinid/configure-eshell ()
   ;; Save command history when commands are entered
   (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
@@ -185,135 +251,153 @@
             (concat "[" (getenv "USER") "]"
              (eshell/pwd) (if (= (user-uid) 0) " # " " λ "))))
 
-(use-package haskell-mode)
-
 (server-start)
+  
+(setq mouse-autoselect-window t
+      focus-follows-mouse t)
+  
+  (defun vinid/exwm-init-hook ()
+    ;; Make workspace 1 be the one where we land at startup
+    (exwm-workspace-switch-create 1))
+  
+  
+  (defun vinid/exwm-update-class ()
+    (exwm-workspace-rename-buffer exwm-class-name))
+  ;; defines a function that makes a nicer visualization for the firefox tab
+  (defun vinid/exwm-update-title ()
+    (pcase exwm-class-name
+      ("Firefox" (exwm-workspace-rename-buffer (format "Firefox: %s" exwm-title)))))
+  
+  
+  (defun vinid/set-wallpaper ()
+    (interactive)
+    ;; NOTE: You will need to update this to a valid background path!
+    (start-process-shell-command
+     "feh" nil  "feh --bg-scale /home/vinid/Pictures/Wallpapers/forest.jpg"))
+  
+  (use-package exwm
+    :config
+    ;; Set the default number of workspaces
+    (setq exwm-workspace-number 5)
+  
+    ;; When window "class" updates, use it to set the buffer name
+    (add-hook 'exwm-update-class-hook #'vinid/exwm-update-class)
+  
+    ;; When EXWM starts up, do some extra configuration
+    (add-hook 'exwm-init-hook #'vinid/exwm-init-hook)
+  
+    (setq mouse-autoselect-window nil
+          focus-follows-mouse nil)
+  
+    ;; When window title updates, use it to set the buffer name
+  
+    (add-hook 'exwm-update-title-hook #'vinid/exwm-update-title)
+    ;; To add a key binding only available in line-mode, simply define it in
+    ;; `exwm-mode-map'.  The following example shortens 'C-c q' to 'C-q'.
+    (define-key exwm-mode-map [?\C-q] #'exwm-input-send-next-key)
+  
+    ;; adding a way to run apps
+    (exwm-input-set-key (kbd "s-SPC") 'counsel-linux-app)
+  
+    ;; toggle fullscreen
+    (exwm-input-set-key (kbd "s-f") 'exwm-layout-toggle-fullscreen)
+  
+    ;; Set the wallpaper after changing the resolution
+    (vinid/set-wallpaper)
+  
+    ;; These keys should always pass through to Emacs
+    (setq exwm-input-prefix-keys
+          '(?\C-x
+            ?\C-u
+            ?\C-h
+            ?\M-x
+            ?\M-`
+            ?\M-&
+            ?\M-:
+            ?\C-\M-j  ;; Buffer list
+            ?\C-\ ))  ;; Ctrl+Space
+  
+    ;; Ctrl+Q will enable the next key to be sent directly
+    (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
+  
+    ;; The following example demonstrates how to use simulation keys to mimic
+    ;; the behavior of Emacs.  The value of `exwm-input-simulation-keys` is a
+    ;; list of cons cells (SRC . DEST), where SRC is the key sequence you press
+    ;; and DEST is what EXWM actually sends to application.  Note that both SRC
+    ;; and DEST should be key sequences (vector or string).
+    (setq exwm-input-simulation-keys
+          '(
+            ;; movement
+            ([?\C-b] . [left])
+            ([?\M-b] . [C-left])
+            ([?\C-f] . [right])
+            ([?\M-f] . [C-right])
+            ([?\C-p] . [up])
+            ([?\C-n] . [down])
+            ([?\C-a] . [home])
+            ([?\C-e] . [end])
+            ([?\M-v] . [prior])
+            ([?\C-v] . [next])
+            ([?\C-d] . [delete])
+            ([?\M-d] . [C-S-right delete])
+            ([?\C-k] . [S-end delete])
+            ;; cut paste
+            ([?\C-w] . [?\C-x])
+            ([?\M-w] . [?\C-c])
+            ([?\C-y] . [?\C-v])
+            ;; search
+            ([?\C-s] . [?\C-f])))
+  
+    ;; Set up global key bindings.  These always work, no matter the input state!
+    ;; Keep in mind that changing this list after EXWM initializes has no effect.
+    (setq exwm-input-global-keys
+          `(
+            ;; Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
+            ([?\s-r] . exwm-reset)
+  
+            ;; Move between windows
+            ([s-left] . windmove-left)
+            ([s-right] . windmove-right)
+            ([s-up] . windmove-up)
+            ([s-down] . windmove-down)
+  
+            ;; Launch applications via shell command
+            ([?\s-&] . (lambda (command)
+                         (interactive (list (read-shell-command "$ ")))
+                         (start-process-shell-command command nil command)))
+  
+            ;; Switch workspace
+            ([?\s-w] . exwm-workspace-switch)
+            ([?\s-`] . (lambda () (interactive) (exwm-workspace-switch-create 0)))
+  
+            ;; 's-N': Switch to certain workspace with Super (Win) plus a number key (0 - 9)
+            ,@(mapcar (lambda (i)
+                        `(,(kbd (format "s-%d" i)) .
+                          (lambda ()
+                            (interactive)
+                            (exwm-workspace-switch-create ,i))))
+                      (number-sequence 0 9))))
+  
+    (exwm-input-set-key (kbd "s-SPC") 'counsel-linux-app)
+  
+    (exwm-enable))
 
-(defun vinid/exwm-init-hook ()
-  ;; Make workspace 1 be the one where we land at startup
-  (exwm-workspace-switch-create 1))
+(require 'exwm-randr)
+
+(exwm-randr-enable)
+
+(setq exwm-randr-workspace-monitor-plist '(2 "HDMI-1-2"))
+
+(setq exwm-workspace-warp-cursor t)
 
 
-(defun vinid/exwm-update-class ()
-  (exwm-workspace-rename-buffer exwm-class-name))
+                                        ;  (defun vinid/update-displays ()
+                                        ;    (vinid/run-in-background "autorandr --change --force")
+                                        ;    (message "Display config: %s"
+                                        ;             (string-trim (shell-command-to-string "autorandr --current"))))
 
-	 ;; defines a function that makes a nicer visualization for the firefox tab
-	 (defun vinid/exwm-update-title ()
-	   (pcase exwm-class-name
-	     ("Firefox" (exwm-workspace-rename-buffer (format "Firefox: %s" exwm-title)))))
-
-
-       (defun vinid/set-wallpaper ()
-	 (interactive)
-	 ;; NOTE: You will need to update this to a valid background path!
-	 (start-process-shell-command
-	     "feh" nil  "feh --bg-scale /home/vinid/Pictures/Wallpapers/forest.jpg"))
-
-   (use-package exwm
-     :config
-     ;; Set the default number of workspaces
-     (setq exwm-workspace-number 5)
-
-     ;; When window "class" updates, use it to set the buffer name
-     (add-hook 'exwm-update-class-hook #'vinid/exwm-update-class)
-
-     ;; When EXWM starts up, do some extra confifuration
-     (add-hook 'exwm-init-hook #'vinid/exwm-init-hook)
-
-	(setq mouse-autoselect-window nil
-	      focus-follows-mouse nil)
-
-	  ;; When window title updates, use it to set the buffer name
-
-	(add-hook 'exwm-update-title-hook #'vinid/exwm-update-title)
-	  ;; To add a key binding only available in line-mode, simply define it in
-	  ;; `exwm-mode-map'.  The following example shortens 'C-c q' to 'C-q'.
-	  (define-key exwm-mode-map [?\C-q] #'exwm-input-send-next-key)
-
-	  ;; adding a way to run apps
-
-	  (exwm-input-set-key (kbd "s-SPC") 'counsel-linux-app)
-	  (exwm-input-set-key (kbd "s-f") 'exwm-layout-toggle-fullscreen)
-
-     ;; Set the wallpaper after changing the resolution
-     (vinid/set-wallpaper)
-
-     ;; These keys should always pass through to Emacs
-     (setq exwm-input-prefix-keys
-       '(?\C-x
-	 ?\C-u
-	 ?\C-h
-	 ?\M-x
-	 ?\M-`
-	 ?\M-&
-	 ?\M-:
-	 ?\C-\M-j  ;; Buffer list
-	 ?\C-\ ))  ;; Ctrl+Space
-
-     ;; Ctrl+Q will enable the next key to be sent directly
-     (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
-
-  ;; The following example demonstrates how to use simulation keys to mimic
-	 ;; the behavior of Emacs.  The value of `exwm-input-simulation-keys` is a
-	 ;; list of cons cells (SRC . DEST), where SRC is the key sequence you press
-	 ;; and DEST is what EXWM actually sends to application.  Note that both SRC
-	 ;; and DEST should be key sequences (vector or string).
-	 (setq exwm-input-simulation-keys
-	       '(
-		 ;; movement
-		 ([?\C-b] . [left])
-		 ([?\M-b] . [C-left])
-		 ([?\C-f] . [right])
-		 ([?\M-f] . [C-right])
-		 ([?\C-p] . [up])
-		 ([?\C-n] . [down])
-		 ([?\C-a] . [home])
-		 ([?\C-e] . [end])
-		 ([?\M-v] . [prior])
-		 ([?\C-v] . [next])
-		 ([?\C-d] . [delete])
-		 ([?\M-d] . [C-S-right delete])
-		 ([?\C-k] . [S-end delete])
-		 ;; cut paste
-		 ([?\C-w] . [?\C-x])
-		 ([?\M-w] . [?\C-c])
-		 ([?\C-y] . [?\C-v])
-		 ;; search
-		 ([?\C-s] . [?\C-f])))
-
-     ;; Set up global key bindings.  These always work, no matter the input state!
-     ;; Keep in mind that changing this list after EXWM initializes has no effect.
-     (setq exwm-input-global-keys
-	   `(
-	     ;; Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
-	     ([?\s-r] . exwm-reset)
-
-	     ;; Move between windows
-	     ([s-left] . windmove-left)
-	     ([s-right] . windmove-right)
-	     ([s-up] . windmove-up)
-	     ([s-down] . windmove-down)
-
-	     ;; Launch applications via shell command
-	     ([?\s-&] . (lambda (command)
-			  (interactive (list (read-shell-command "$ ")))
-			  (start-process-shell-command command nil command)))
-
-	     ;; Switch workspace
-	     ([?\s-w] . exwm-workspace-switch)
-	     ([?\s-`] . (lambda () (interactive) (exwm-workspace-switch-create 0)))
-
-	     ;; 's-N': Switch to certain workspace with Super (Win) plus a number key (0 - 9)
-	     ,@(mapcar (lambda (i)
-			 `(,(kbd (format "s-%d" i)) .
-			   (lambda ()
-			     (interactive)
-			     (exwm-workspace-switch-create ,i))))
-		       (number-sequence 0 9))))
-
-     (exwm-input-set-key (kbd "s-SPC") 'counsel-linux-app)
-
-     (exwm-enable))
+                                        ;  (add-hook 'exwm-randr-screen-change-hook #'vinid/update-displays)
+                                        ;  (vinid/update-displays)
 
 (defun vinid/run-in-background (command)
    (let ((command-parts (split-string command "[ ]+")))
@@ -363,10 +447,10 @@
 (setq exwm-workspace-number 4)
 
 (defun vinid/org-font-setup ()
-    ;; Replace list hyphen with dot
-    (font-lock-add-keywords 'org-mode
-                            '(("^ *\\([-]\\) "
-                               (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+  ;; Replace list hyphen with dot
+  (font-lock-add-keywords 'org-mode
+                          '(("^ *\\([-]\\) "
+                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
 
     ;; Set faces for heading levels
     (dolist (face '((org-level-1 . 1.2)
@@ -411,7 +495,6 @@
   :hook (org-mode . org-bullets-mode)
   :custom
   (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
-
 
 (use-package org-journal)
 
@@ -493,22 +576,26 @@
 (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'vinid/org-babel-tangle-config)))
 
 (use-package org-roam
-         :ensure t
-         :hook
-         (after-init . org-roam-mode)
-         :custom
-         (org-roam-directory "/home/vinid/Dropbox/org/roam")
-         :bind (:map org-roam-mode-map
-                 (("C-c n l" . org-roam)
-                  ("C-c n f" . org-roam-find-file)
-                  ("C-c n g" . org-roam-graph))
-                 :map org-mode-map
-                 (("C-c n i" . org-roam-insert))
-                 (("C-c n I" . org-roam-insert-immediate))))
+      :ensure t
+      :custom
+      (org-roam-directory (file-truename "/home/vinid/Dropbox/org/roam"))
+      :bind (("C-c n l" . org-roam-buffer-toggle)
+             ("C-c n f" . org-roam-node-find)
+             ("C-c n g" . org-roam-graph)
+             ("C-c n i" . org-roam-node-insert)
+             ("C-c n c" . org-roam-capture)
+             ;; Dailies
+             ("C-c n j" . org-roam-dailies-capture-today))
+      :config
+      (org-roam-setup))
+      ;; If using org-roam-protocol
+;      (require 'org-roam-protocol))
 
-(add-to-list 'exec-path "/usr/bin/") ; probably not necessary
+  (setq org-roam-v2-ack t)
 
-(add-hook 'after-init-hook 'org-roam-mode)
+  (add-to-list 'exec-path "/usr/bin/") ; probably not necessary
+
+;  (add-hook 'after-init-hook 'org-roam-mode)
 
 (use-package org-ref)
 
@@ -517,21 +604,6 @@
 (setq org-ref-bibliography-notes "~/Dropbox/bibliography/notes.org"
         org-ref-default-bibliography '("~/Dropbox/bibliography/references.bib")
         org-ref-pdf-directory "~/Dropbox/bibliography/bibtex-pdfs/")
-
-(defun search-google ()
-"A function that google a selected region, if any, alternatively asks for something to serach"
-  (interactive)
-  (let ((searchkey  (url-hexify-string (if mark-active
-         (buffer-substring (region-beginning) (region-end))
-       (read-string "Serach String: ")))))
-  (browse-url (concat "https://www.google.com/search?&q=" searchkey))))
-
-(defun open-grammarly-with-kill ()
-"A function to open a new grammarly document"
-  (interactive)
-  (progn  
-       (if mark-active (copy-region-as-kill (region-beginning) (region-end)) nil)
-       (browse-url "https://app.grammarly.com/docs/new")))
 
 (defun vinid/emacs-configuration ()
     (interactive)
@@ -549,6 +621,4 @@
   (global-set-key (kbd "C-c e g") 'vinid/gtd-file)
   (global-set-key (kbd "C-c e r") 'vinid/inbox-file)
 
-(global-set-key (kbd "C-c g") #'search-google)
-(global-set-key (kbd "C-c r") #'open-grammarly-with-kill)
 (global-set-key (kbd "C-ò") 'delete-backward-char)

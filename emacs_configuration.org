@@ -592,6 +592,7 @@ All the configuration params currently used in EXWM.
 
 * Apps
 
+
 ** Run in background function
 
 
