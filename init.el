@@ -1,3 +1,20 @@
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
+
+
+(straight-use-package 'use-package)
+(setq straight-use-package-by-default t)
+
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 (menu-bar-mode -1)
@@ -7,26 +24,6 @@
 (setq clean-buffer-list-delay-special (* 1 3600))
 (setq clean-buffer-list-delay-general 1)
 (global-set-key (kbd "C-c e b") 'clean-buffer-list)
-
-;; Initialize package sources
-(require 'package)
-
-(setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                         ("org" . "https://orgmode.org/elpa/")
-                         ("elpa" . "https://elpa.gnu.org/packages/")))
-
-(package-initialize)
-
-(unless package-archive-contents
-  (package-refresh-contents))
-
-  ;; Initialize use-package on non-Linux platforms
-(unless (package-installed-p 'use-package)
-  (package-install 'use-package))
-
-(require 'use-package)
-
-(setq use-package-always-ensure t)
 
 (defvar vinid/default-font-size 140)
 (defvar vinid/default-variable-font-size 140)
@@ -51,7 +48,7 @@
 (ido-mode 1)
 
 (use-package doom-modeline
-  :ensure t
+  :straight t
   :init (doom-modeline-mode 1)
   :custom ((doom-modeline-height 15)))
 
@@ -134,7 +131,7 @@
   :hook (org-mode . vinid/org-mode-visual-fill))
 
 (use-package dired
-  :ensure nil
+  :straight nil
   :commands (dired dired-jump)
   :bind (("C-x C-j" . dired-jump))
   :custom ((dired-listing-switches "-agho --group-directories-first")))
@@ -150,7 +147,7 @@
   (bind-key   "H" 'dired-hide-dotfiles-mode))
 
 (use-package ledger-mode
-  :ensure t 
+  :straight t 
   :mode ".ldg")
 
 ;;    (add-to-list 'load-path "/usr/share/emacs/site-lisp/mu4e")
@@ -210,7 +207,7 @@
  ;    (mu4e t)
 
 (use-package perspective
-:ensure t  ; use `:straight t` if using straight.el!
+:straight t  ; use `:straight t` if using straight.el!
 :bind (("C-x k" . persp-kill-buffer*))
 :init
 (persp-mode))
@@ -576,7 +573,7 @@
 (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'vinid/org-babel-tangle-config)))
 
 (use-package org-roam
-      :ensure t
+      :straight t
       :custom
       (org-roam-directory (file-truename "/home/vinid/Dropbox/org/roam"))
       :bind (("C-c n l" . org-roam-buffer-toggle)
@@ -605,6 +602,8 @@
         org-ref-default-bibliography '("~/Dropbox/bibliography/references.bib")
         org-ref-pdf-directory "~/Dropbox/bibliography/bibtex-pdfs/")
 
+(use-package magit)
+
 (defun vinid/emacs-configuration ()
     (interactive)
     (find-file "~/.emacs.d/emacs_configuration.org"))
@@ -622,3 +621,8 @@
   (global-set-key (kbd "C-c e r") 'vinid/inbox-file)
 
 (global-set-key (kbd "C-ò") 'delete-backward-char)
+
+(use-package 1passel
+  :straight '(1passel :host github
+                                 :repo "vinid/1passel"
+                                 :branch "master"))
