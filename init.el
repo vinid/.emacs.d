@@ -131,20 +131,20 @@
   :hook (org-mode . vinid/org-mode-visual-fill))
 
 (use-package dired
-  :straight nil
-  :commands (dired dired-jump)
-  :bind (("C-x C-j" . dired-jump))
-  :custom ((dired-listing-switches "-agho --group-directories-first")))
+    :straight nil
+    :commands (dired dired-jump)
+    :bind (("C-x C-j" . dired-jump))
+    :custom ((dired-listing-switches "-agho --group-directories-first")))
 
-(use-package dired-single)
+  (use-package dired-single)
 
-(use-package all-the-icons-dired
-  :hook (dired-mode . all-the-icons-dired-mode))
+  (use-package all-the-icons-dired
+    :hook (dired-mode . all-the-icons-dired-mode))
 
-(use-package dired-hide-dotfiles
-  :hook (dired-mode . dired-hide-dotfiles-mode)
-  :config
-  (bind-key   "H" 'dired-hide-dotfiles-mode))
+;  (use-package dired-hide-dotfiles
+ ;   :hook (dired-mode . dired-hide-dotfiles-mode)
+  ;  :config
+   ; (bind-key   "H" 'dired-hide-dotfiles-mode))
 
 (use-package ledger-mode
   :straight t 
@@ -273,10 +273,8 @@
 
 (setq org-todo-keyword-faces
       (quote (("TODO" :foreground "red" :weight bold)
-              ("PROG" :foreground "yellow" :weight bold)
-              ("WAIT" :foreground "blue" :weight bold)
+              ("WAIT" :foreground "yellow" :weight bold)
               ("NEXT" :foreground "orange" :weight bold)
-              ("INTR" :foreground "pink" :weight bold)
               ("DONE" :foreground "forest green" :weight bold))))
 
  (setq org-treat-S-cursor-todo-selection-as-state-change nil)
@@ -284,11 +282,10 @@
  (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
 
 (setq org-agenda-custom-commands
-  '(("n" "Agenda / INTR / PROG / NEXT"
+  '(("n" "Agenda / NEXT / TODO"
      ((agenda "" nil)
-      (todo "INTR" nil)
-      (todo "PROG" nil)
-      (todo "NEXT" nil))
+      (todo "NEXT" nil)
+      (todo "TODO" nil))
      nil)))
 
 (require 'org-habit)
@@ -316,26 +313,36 @@
 (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'vinid/org-babel-tangle-config)))
 
 (use-package org-roam
-      :straight t
-      :custom
-      (org-roam-directory (file-truename "/home/vinid/Dropbox/org/roam"))
-      :bind (("C-c n l" . org-roam-buffer-toggle)
-             ("C-c n f" . org-roam-node-find)
-             ("C-c n g" . org-roam-graph)
-             ("C-c n i" . org-roam-node-insert)
-             ("C-c n c" . org-roam-capture)
-             ;; Dailies
-             ("C-c n j" . org-roam-dailies-capture-today))
-      :config
-      (org-roam-setup))
-      ;; If using org-roam-protocol
-;      (require 'org-roam-protocol))
-
+  :ensure t
+  :init
   (setq org-roam-v2-ack t)
+  :custom
+  (org-roam-directory (file-truename "/home/vinid/Dropbox/org/roam"))
+  (org-roam-completion-everywhere t)
+  (org-roam-dailies-capture-templates
+   '(("d" "default" entry "* %<%I:%M %p>: %?"
+      :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n "))))
+  :bind (("C-c n l" . org-roam-buffer-toggle)
+         ("C-c n f" . org-roam-node-find)
+         ("C-c n i" . org-roam-node-insert)
+         :map org-mode-map
+         ("C-M-i" . completion-at-point)
+         :map org-roam-dailies-map
+         ("Y" . org-roam-dailies-capture-yesterday)
+         ("T" . org-roam-dailies-capture-tomorrow))
+  :bind-keymap
+  ("C-c n d" . org-roam-dailies-map)
+  :config
+  (require 'org-roam-dailies) ;; Ensure the keymap is available
+  (org-roam-db-autosync-mode))
 
-  (add-to-list 'exec-path "/usr/bin/") ; probably not necessary
 
-;  (add-hook 'after-init-hook 'org-roam-mode)
+
+(setq org-roam-v2-ack t)
+
+;(add-to-list 'exec-path "/usr/bin/") ; probably not necessary
+
+                                        ;  (add-hook 'after-init-hook 'org-roam-mode)
 
 (use-package org-ref)
 
@@ -564,3 +571,67 @@
   :straight '(1passel :host github
                                  :repo "vinid/1passel"
                                  :branch "master"))
+
+(use-package mu4e
+    :load-path "/home/vinid/.emacs.d/straight/repos/mu/mu4e/"
+    :defer 20
+    :config
+
+    ;; This is set to 't' to avoid mail syncing issues when using mbsync
+    (setq mu4e-change-filenames-when-moving t)
+
+    ;; Refresh mail using isync every 10 minutes
+    (setq mu4e-update-interval (* 10 60))
+    (setq mu4e-get-mail-command "mbsync -a")
+    (setq mu4e-maildir "~/Mail")
+
+    (setq mu4e-contexts
+          (list
+           ;; Work account
+           (make-mu4e-context
+            :name "Personal"
+            :match-func
+            (lambda (msg)
+              (when msg
+                (string-prefix-p "/Gmail" (mu4e-message-field msg :maildir))))
+            :vars '((user-mail-address . "chiccobia@gmail.com")
+                    (user-full-name    . "Federico Bianchi")
+                    (smtpmail-smtp-server  . "smtp.gmail.com")
+                    (smtpmail-smtp-service . 465)
+                    (smtpmail-stream-type  . ssl)
+                    (mu4e-drafts-folder  . "/Gmail/[Gmail]/Drafts")
+                    (mu4e-sent-folder  . "/Gmail/[Gmail]/Sent Mail")
+                    (mu4e-refile-folder  . "/Gmail/[Gmail]/All Mail")
+                    (mu4e-trash-folder  . "/Gmail/[Gmail]/Trash")))
+
+           ;; Personal account
+           (make-mu4e-context
+            :name "Work"
+            :match-func
+            (lambda (msg)
+              (when msg
+                (string-prefix-p "/Outlook" (mu4e-message-field msg :maildir))))
+            :vars '((user-mail-address . "f.bianchi@unibocconi.it")
+                    (user-full-name    . "Federico Bianchi")
+                    (mu4e-drafts-folder  . "/Outlook/Drafts")
+                    (mu4e-sent-folder  . "/Outlook/Sent")
+                    (mu4e-refile-folder  . "/Outlook/Archive")
+                    (mu4e-trash-folder  . "/Outlook/Posta eliminata")))))
+
+    (setq mu4e-maildir-shortcuts
+          '(("/Inbox"             . ?i)
+            ("/Gmail/[Gmail]/Sent Mail" . ?s)
+            ("/Gmail/[Gmail]/Trash"     . ?t)
+            ("/Gmail/[Gmail]/Drafts"    . ?d)
+            ("/Gmail/[Gmail]/All Mail"  . ?a))))
+
+  (setq mu4e-mu-binary "/usr/local/bin/mu")
+
+  (setq mu4e-bookmarks
+        '((:name "Unread messages" :query "flag:unread AND NOT flag:trashed" :key ?i)
+          (:name "Today's messages" :query "date:today..now" :key ?t)
+            (:name "All Inboxes"  :query "(flag:unread AND maildir:/Outlook/Inbox) OR (maildir:/Gmail/Inbox AND flag:unread)"  :key ?b)
+            (:name "Last 7 days" :query "date:7d..now" :hide-unread t :key ?w)
+           (:name "Messages with images" :query "mime:image/*" :key ?p)))
+
+(mu4e t)

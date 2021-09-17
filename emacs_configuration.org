@@ -114,29 +114,29 @@ Cleaning unused buffers
 
 
 #+begin_src emacs-lisp
-
+  
   (use-package all-the-icons)
-
+  
   (use-package spacegray-theme :defer t)
   (use-package doom-themes
     :init (load-theme 'doom-palenight t))
-
+  
   (ido-mode 1)
-
+  
   (use-package doom-modeline
     :straight t
     :init (doom-modeline-mode 1)
     :custom ((doom-modeline-height 15)))
-
+  
   (global-display-line-numbers-mode t)
-
+  
   (set-frame-parameter (selected-frame) 'alpha vinid/frame-transparency)
   (add-to-list 'default-frame-alist `(alpha . ,vinid/frame-transparency))
-
+  
   (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
   (add-to-list 'default-frame-alist '(fullscreen . maximized))
-
-
+  
+  
   ;; Disable line numbers for some modes
   (dolist (mode '(org-mode-hook
                   term-mode-hook
@@ -144,8 +144,8 @@ Cleaning unused buffers
                   treemacs-mode-hook
                   eshell-mode-hook))
     (add-hook mode (lambda () (display-line-numbers-mode 0))))
-
-
+  
+  
 #+end_src
 
 
@@ -261,10 +261,10 @@ This part of the configuration includes basic stuff needed to have a working ema
   (use-package all-the-icons-dired
     :hook (dired-mode . all-the-icons-dired-mode))
 
-  (use-package dired-hide-dotfiles
-    :hook (dired-mode . dired-hide-dotfiles-mode)
-    :config
-    (bind-key   "H" 'dired-hide-dotfiles-mode))
+;  (use-package dired-hide-dotfiles
+ ;   :hook (dired-mode . dired-hide-dotfiles-mode)
+  ;  :config
+   ; (bind-key   "H" 'dired-hide-dotfiles-mode))
 
 #+end_src
 
@@ -439,33 +439,30 @@ Setting the main variables
 Custom view to personalize the org-mode experience
 
 #+BEGIN_SRC emacs-lisp
-
+  
    (setq org-todo-keywords
        '((sequence "TODO(t)" "NEXT(n)" "PROG(p)" "INTR(i)" "DONE(d)")))
-
+  
   (setq org-agenda-span 'day)
-
-
+  
+  
   (setq org-todo-keyword-faces
         (quote (("TODO" :foreground "red" :weight bold)
-                ("PROG" :foreground "yellow" :weight bold)
-                ("WAIT" :foreground "blue" :weight bold)
+                ("WAIT" :foreground "yellow" :weight bold)
                 ("NEXT" :foreground "orange" :weight bold)
-                ("INTR" :foreground "pink" :weight bold)
                 ("DONE" :foreground "forest green" :weight bold))))
-
+  
    (setq org-treat-S-cursor-todo-selection-as-state-change nil)
-
+  
    (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
-
+  
   (setq org-agenda-custom-commands
-    '(("n" "Agenda / INTR / PROG / NEXT"
+    '(("n" "Agenda / NEXT / TODO"
        ((agenda "" nil)
-        (todo "INTR" nil)
-        (todo "PROG" nil)
-        (todo "NEXT" nil))
+        (todo "NEXT" nil)
+        (todo "TODO" nil))
        nil)))
-
+  
 #+END_SRC
 
 *** Org-habits
@@ -517,32 +514,44 @@ This snippet adds a hook to =org-mode= buffers so that =vinid/org-babel-tangle-c
   
 #+end_src
 
+*** Org Roam
+
 Configuring org roam for note taking
 
 
 #+BEGIN_SRC emacs-lisp
   
-    (use-package org-roam
-        :straight t
-        :custom
-        (org-roam-directory (file-truename "/home/vinid/Dropbox/org/roam"))
-        :bind (("C-c n l" . org-roam-buffer-toggle)
-               ("C-c n f" . org-roam-node-find)
-               ("C-c n g" . org-roam-graph)
-               ("C-c n i" . org-roam-node-insert)
-               ("C-c n c" . org-roam-capture)
-               ;; Dailies
-               ("C-c n j" . org-roam-dailies-capture-today))
-        :config
-        (org-roam-setup))
-        ;; If using org-roam-protocol
-  ;      (require 'org-roam-protocol))
-  
+  (use-package org-roam
+    :ensure t
+    :init
     (setq org-roam-v2-ack t)
+    :custom
+    (org-roam-directory (file-truename "/home/vinid/Dropbox/org/roam"))
+    (org-roam-completion-everywhere t)
+    (org-roam-dailies-capture-templates
+     '(("d" "default" entry "* %<%I:%M %p>: %?"
+        :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n "))))
+    :bind (("C-c n l" . org-roam-buffer-toggle)
+           ("C-c n f" . org-roam-node-find)
+           ("C-c n i" . org-roam-node-insert)
+           :map org-mode-map
+           ("C-M-i" . completion-at-point)
+           :map org-roam-dailies-map
+           ("Y" . org-roam-dailies-capture-yesterday)
+           ("T" . org-roam-dailies-capture-tomorrow))
+    :bind-keymap
+    ("C-c n d" . org-roam-dailies-map)
+    :config
+    (require 'org-roam-dailies) ;; Ensure the keymap is available
+    (org-roam-db-autosync-mode))
   
-    (add-to-list 'exec-path "/usr/bin/") ; probably not necessary
   
-  ;  (add-hook 'after-init-hook 'org-roam-mode)
+  
+  (setq org-roam-v2-ack t)
+  
+  ;(add-to-list 'exec-path "/usr/bin/") ; probably not necessary
+  
+                                          ;  (add-hook 'after-init-hook 'org-roam-mode)
   
 #+end_src
 
@@ -1226,6 +1235,7 @@ Very simple polybar to have on top of the EXWM desktop environment
 
 ** 1passel
 
+
 1passel is a very simple utility I have built to manage 1password integration withing EXWM
 
 #+begin_src emacs-lisp
@@ -1235,6 +1245,80 @@ Very simple polybar to have on top of the EXWM desktop environment
                                      :repo "vinid/1passel"
                                      :branch "master"))
     
+#+end_src
+
+
+** Mu4E
+
+Note that I made a bit of a mess configuring this. I am now using mu 1.6.3 but that should be installed from the tarball
+
+#+begin_src emacs-lisp
+    (use-package mu4e
+      :load-path "/home/vinid/.emacs.d/straight/repos/mu/mu4e/"
+      :defer 20
+      :config
+  
+      ;; This is set to 't' to avoid mail syncing issues when using mbsync
+      (setq mu4e-change-filenames-when-moving t)
+  
+      ;; Refresh mail using isync every 10 minutes
+      (setq mu4e-update-interval (* 10 60))
+      (setq mu4e-get-mail-command "mbsync -a")
+      (setq mu4e-maildir "~/Mail")
+  
+      (setq mu4e-contexts
+            (list
+             ;; Work account
+             (make-mu4e-context
+              :name "Personal"
+              :match-func
+              (lambda (msg)
+                (when msg
+                  (string-prefix-p "/Gmail" (mu4e-message-field msg :maildir))))
+              :vars '((user-mail-address . "chiccobia@gmail.com")
+                      (user-full-name    . "Federico Bianchi")
+                      (smtpmail-smtp-server  . "smtp.gmail.com")
+                      (smtpmail-smtp-service . 465)
+                      (smtpmail-stream-type  . ssl)
+                      (mu4e-drafts-folder  . "/Gmail/[Gmail]/Drafts")
+                      (mu4e-sent-folder  . "/Gmail/[Gmail]/Sent Mail")
+                      (mu4e-refile-folder  . "/Gmail/[Gmail]/All Mail")
+                      (mu4e-trash-folder  . "/Gmail/[Gmail]/Trash")))
+  
+             ;; Personal account
+             (make-mu4e-context
+              :name "Work"
+              :match-func
+              (lambda (msg)
+                (when msg
+                  (string-prefix-p "/Outlook" (mu4e-message-field msg :maildir))))
+              :vars '((user-mail-address . "f.bianchi@unibocconi.it")
+                      (user-full-name    . "Federico Bianchi")
+                      (mu4e-drafts-folder  . "/Outlook/Drafts")
+                      (mu4e-sent-folder  . "/Outlook/Sent")
+                      (mu4e-refile-folder  . "/Outlook/Archive")
+                      (mu4e-trash-folder  . "/Outlook/Posta eliminata")))))
+  
+      (setq mu4e-maildir-shortcuts
+            '(("/Inbox"             . ?i)
+              ("/Gmail/[Gmail]/Sent Mail" . ?s)
+              ("/Gmail/[Gmail]/Trash"     . ?t)
+              ("/Gmail/[Gmail]/Drafts"    . ?d)
+              ("/Gmail/[Gmail]/All Mail"  . ?a))))
+  
+    (setq mu4e-mu-binary "/usr/local/bin/mu")
+  
+    (setq mu4e-bookmarks
+          '((:name "Unread messages" :query "flag:unread AND NOT flag:trashed" :key ?i)
+            (:name "Today's messages" :query "date:today..now" :key ?t)
+              (:name "All Inboxes"  :query "(flag:unread AND maildir:/Outlook/Inbox) OR (maildir:/Gmail/Inbox AND flag:unread)"  :key ?b)
+              (:name "Last 7 days" :query "date:7d..now" :hide-unread t :key ?w)
+             (:name "Messages with images" :query "mime:image/*" :key ?p)))
+  
+  (mu4e t)
+  
+  
+  
 #+end_src
 
 * Reference
