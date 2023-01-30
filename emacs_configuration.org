@@ -2,6 +2,7 @@
 #+PROPERTY: header-args:emacs-lisp :tangle ./init.el :mkdirp yes
 
 
+
 * Initial Setting
 
 ** Setup
@@ -96,24 +97,20 @@ Cleaning unused buffers
 ** Desktop Setup
 
 #+begin_src emacs-lisp
-
-(defvar vinid/default-font-size 140)
-(defvar vinid/default-variable-font-size 140)
-
-;; Make frame transparency overridable
-(defvar vinid/frame-transparency '(90 . 90))
-
-(set-face-attribute 'default nil :font "Fira Code Retina" :height vinid/default-font-size)
-
-;; Set the fixed pitch face
-(set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height vinid/default-font-size)
-
-;; Set the variable pitch face
-(set-face-attribute 'variable-pitch nil :font "Cantarell" :height vinid/default-variable-font-size :weight 'regular)
-#+end_src
-
-
-#+begin_src emacs-lisp
+  
+  (defvar vinid/default-font-size 140)
+  (defvar vinid/default-variable-font-size 140)
+  
+  ;; Make frame transparency overridable
+  (defvar vinid/frame-transparency '(90 . 90))
+  
+  (set-face-attribute 'default nil :font "Fira Code Retina" :height vinid/default-font-size)
+  
+  ;; Set the fixed pitch face
+  (set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height vinid/default-font-size)
+  
+  ;; Set the variable pitch face
+  (set-face-attribute 'variable-pitch nil :font "Cantarell" :height vinid/default-variable-font-size :weight 'regular)
   
   (use-package all-the-icons)
   
@@ -123,10 +120,10 @@ Cleaning unused buffers
   
   (ido-mode 1)
   
-  (use-package doom-modeline
-    :straight t
-    :init (doom-modeline-mode 1)
-    :custom ((doom-modeline-height 15)))
+                                          ;  (use-package doom-modeline
+                                          ;   :straight t
+                                          ;  :init (doom-modeline-mode 1)
+                                          ; :custom ((doom-modeline-height 15)))
   
   (global-display-line-numbers-mode t)
   
@@ -158,7 +155,11 @@ Cleaning unused buffers
 + fonts-firacode
 + fonts-cantarell
 + arandr
-  
+
+#+begin_src
+sudo apt install emacs git fonts-firacode fonts-cantarell compton slock xss-lock arandr
+#+end_src
+
 
 * Other Emacs Packages
 
@@ -167,40 +168,43 @@ This part of the configuration includes basic stuff needed to have a working ema
 *** Ivy
 
 #+begin_src emacs-lisp
-
-    (use-package ivy
-     :diminish
-     :bind (("C-s" . swiper)
-            :map ivy-minibuffer-map
-            ("TAB" . ivy-alt-done)
-            ("C-l" . ivy-alt-done)
-            ("C-j" . ivy-next-line)
-            ("C-k" . ivy-previous-line)
-            :map ivy-switch-buffer-map
-            ("C-k" . ivy-previous-line)
-            ("C-l" . ivy-done)
-            ("C-d" . ivy-switch-buffer-kill)
-            :map ivy-reverse-i-search-map
-            ("C-k" . ivy-previous-line)
-            ("C-d" . ivy-reverse-i-search-kill))
-     :config
-     (ivy-mode 1))
-
-   (use-package ivy-rich
-     :after ivy
-     :init
-     (ivy-rich-mode 1))
-
-   (use-package counsel
-     :bind (("C-M-j" . 'counsel-switch-buffer)
-            :map minibuffer-local-map
-            ("C-r" . 'counsel-minibuffer-history))
-     :custom
-     (counsel-linux-app-format-function #'counsel-linux-app-format-function-name-only)
-     :config
-     (counsel-mode 1))
-
+  
+     (use-package ivy
+      :diminish
+      :bind (("C-s" . swiper)
+             :map ivy-minibuffer-map
+             ("TAB" . ivy-alt-done)
+             ("C-l" . ivy-alt-done)
+             ("C-j" . ivy-next-line)
+             ("C-k" . ivy-previous-line)
+             :map ivy-switch-buffer-map
+             ("C-k" . ivy-previous-line)
+             ("C-l" . ivy-done)
+             ("C-d" . ivy-switch-buffer-kill)
+             :map ivy-reverse-i-search-map
+             ("C-k" . ivy-previous-line)
+             ("C-d" . ivy-reverse-i-search-kill))
+      :config
+      (ivy-mode 1))
+  
+    (use-package ivy-rich
+      :after ivy
+      :init
+      (ivy-rich-mode 1))
+  
+  (use-package counsel
+      :bind (("C-M-j" . 'counsel-switch-buffer)
+             :map minibuffer-local-map
+             ("C-r" . 'counsel-minibuffer-history))
+      :custom
+      (counsel-linux-app-format-function #'counsel-linux-app-format-function-name-only)
+      :config
+  
+  
+  (counsel-mode 1))
+  
 #+end_src
+
 
 
 #+begin_src emacs-lisp 
@@ -230,7 +234,6 @@ This part of the configuration includes basic stuff needed to have a working ema
 (setq auto-save-file-name-transforms
       `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
 #+end_src
-
 
 
 #+begin_src emacs-lisp
@@ -265,17 +268,6 @@ This part of the configuration includes basic stuff needed to have a working ema
  ;   :hook (dired-mode . dired-hide-dotfiles-mode)
   ;  :config
    ; (bind-key   "H" 'dired-hide-dotfiles-mode))
-
-#+end_src
-
-*** Ledger
-
-#+begin_src emacs-lisp
-
-  (use-package ledger-mode
-    :straight t 
-    :mode ".ldg")
-
 
 #+end_src
 
@@ -373,9 +365,6 @@ no-allow-external-cache
   (set-fringe-mode 0)  
 #+end_src
 
-
-
-
 Use package imports
 
 #+begin_src emacs-lisp
@@ -404,47 +393,43 @@ Use package imports
 Setting the main variables
  
 #+begin_src emacs-lisp
-
+  
   (setq org-src-tab-acts-natively t)
   (setq org-journal-dir "~/Dropbox/org/journal/")
   (setq org-log-done t)
   (setq org-journal-file-type 'weekly)
-
-
-    (define-key global-map "\C-ca" 'org-agenda)
-    (define-key global-map "\C-cl" 'org-store-link)
-    (global-set-key (kbd "C-c c") 'org-capture)
-
-
-    (setq org-agenda-files '(
-                             "~/Dropbox/org/gtd/gtd.org"
-                             "~/Dropbox/org/gtd/habits.org"))
-
-
-    (setq org-capture-templates '(("t" "Todo [inbox]" entry
-                                   (file+headline "~/Dropbox/org/gtd/inbox.org" "Refiling")
-                                   "* TODO %i%?")))
-
-    (setq org-refile-targets
-      '(("~/Dropbox/org/gtd/gtd.org" :maxlevel . 3)
-        ("~/Dropbox/org/gtd/archive.org" :maxlevel . 1)))
-
-    ;; Save Org buffers after refiling!
-    (advice-add 'org-refile :after 'org-save-all-org-buffers)
-
-
+  
+  
+  (define-key global-map "\C-ca" 'org-agenda)
+  (define-key global-map "\C-cl" 'org-store-link)
+  (global-set-key (kbd "C-c c") 'org-capture)
+  
+  
+  (setq org-agenda-files '(
+                           "~/Dropbox/org/gtd/gtd.org", "~/Dropbox/org/projects.org"))
+  
+  (setq org-capture-templates '(("t" "Todo [inbox]" entry
+                                 (file+headline "~/Dropbox/org/gtd/inbox.org" "Refiling")
+                                 "* TODO %i%?")))
+  
+  (setq org-refile-targets
+        '(("~/Dropbox/org/gtd/gtd.org" :maxlevel . 3)
+          ("~/Dropbox/org/gtd/archive.org" :maxlevel . 1)))
+  
+  ;; Save Org buffers after refiling!
+  (advice-add 'org-refile :after 'org-save-all-org-buffers)
+  
+  
 #+end_src
-
 
 Custom view to personalize the org-mode experience
 
 #+BEGIN_SRC emacs-lisp
   
    (setq org-todo-keywords
-       '((sequence "TODO(t)" "NEXT(n)" "PROG(p)" "INTR(i)" "DONE(d)")))
+       '((sequence "TODO(t)" "NEXT(n)" "DONE(d)")))
   
   (setq org-agenda-span 'day)
-  
   
   (setq org-todo-keyword-faces
         (quote (("TODO" :foreground "red" :weight bold)
@@ -465,23 +450,8 @@ Custom view to personalize the org-mode experience
   
 #+END_SRC
 
-*** Org-habits
-#+begin_src emacs-lisp
 
- (require 'org-habit)
- (add-to-list 'org-modules 'org-habit)
-
-#+end_src 
-
-
-#+begin_src emacs-lisp
-
-(use-package org
-   :config
-  (add-to-list 'org-modules 'org-tempo))
-
-#+end_src 
-
+** Org-Mode
 
 To execute or export code in =org-mode= code blocks, you'll need to set up =org-babel-load-languages= for each language you'd like to use.  [[https://orgmode.org/worg/org-contrib/babel/languages.html][This page]] documents all of the languages that you can use with =org-babel=.
 
@@ -510,206 +480,180 @@ This snippet adds a hook to =org-mode= buffers so that =vinid/org-babel-tangle-c
         (org-babel-tangle))))
 
   (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'vinid/org-babel-tangle-config)))
-
   
 #+end_src
-
-*** Org Roam
-
-Configuring org roam for note taking
-
-
-#+BEGIN_SRC emacs-lisp
-  
-  (use-package org-roam
-    :ensure t
-    :init
-    (setq org-roam-v2-ack t)
-    :custom
-    (org-roam-directory (file-truename "/home/vinid/Dropbox/org/roam"))
-    (org-roam-completion-everywhere t)
-    (org-roam-dailies-capture-templates
-     '(("d" "default" entry "* %<%I:%M %p>: %?"
-        :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n "))))
-    :bind (("C-c n l" . org-roam-buffer-toggle)
-           ("C-c n f" . org-roam-node-find)
-           ("C-c n i" . org-roam-node-insert)
-           :map org-mode-map
-           ("C-M-i" . completion-at-point)
-           :map org-roam-dailies-map
-           ("Y" . org-roam-dailies-capture-yesterday)
-           ("T" . org-roam-dailies-capture-tomorrow))
-    :bind-keymap
-    ("C-c n d" . org-roam-dailies-map)
-    :config
-    (require 'org-roam-dailies) ;; Ensure the keymap is available
-    (org-roam-db-autosync-mode))
-  
-  
-  
-  (setq org-roam-v2-ack t)
-  
-  ;(add-to-list 'exec-path "/usr/bin/") ; probably not necessary
-  
-                                          ;  (add-hook 'after-init-hook 'org-roam-mode)
-  
-#+end_src
-
-
-
-Org ref allows an easier managment of the citations
-
-#+begin_src emacs-lisp
-
-
-   (use-package org-ref)
-
-   (setq reftex-default-bibliography '("~/Dropbox/bibliography/references.bib"))
-
-  (setq org-ref-bibliography-notes "~/Dropbox/bibliography/notes.org"
-          org-ref-default-bibliography '("~/Dropbox/bibliography/references.bib")
-          org-ref-pdf-directory "~/Dropbox/bibliography/bibtex-pdfs/")
-
-
-
-#+END_SRC
 
 
 * EXWM
+
+** Run or Raise
+
+from git:tedroden
+
+
+
+
 ** Basic Setup
 All the configuration params currently used in EXWM.
 
+
 #+begin_src emacs-lisp
-  (server-start)
+    (server-start)
   
-(setq mouse-autoselect-window t
-      focus-follows-mouse t)
+  (setq mouse-autoselect-window t
+        focus-follows-mouse t)
   
-  (defun vinid/exwm-init-hook ()
-    ;; Make workspace 1 be the one where we land at startup
-    (exwm-workspace-switch-create 1))
-  
-  
-  (defun vinid/exwm-update-class ()
-    (exwm-workspace-rename-buffer exwm-class-name))
-  ;; defines a function that makes a nicer visualization for the firefox tab
-  (defun vinid/exwm-update-title ()
-    (pcase exwm-class-name
-      ("Firefox" (exwm-workspace-rename-buffer (format "Firefox: %s" exwm-title)))))
+    (defun vinid/exwm-init-hook ()
+      ;; Make workspace 1 be the one where we land at startup
+      (exwm-workspace-switch-create 1))
   
   
-  (defun vinid/set-wallpaper ()
-    (interactive)
-    ;; NOTE: You will need to update this to a valid background path!
-    (start-process-shell-command
-     "feh" nil  "feh --bg-scale /home/vinid/Pictures/Wallpapers/forest.jpg"))
+    (defun vinid/exwm-update-class ()
+      (exwm-workspace-rename-buffer exwm-class-name))
+    ;; defines a function that makes a nicer visualization for the firefox tab
+    (defun vinid/exwm-update-title ()
+      (pcase exwm-class-name
+        ("Firefox" (exwm-workspace-rename-buffer (format "Firefox: %s" exwm-title)))))
   
-  (use-package exwm
-    :config
-    ;; Set the default number of workspaces
-    (setq exwm-workspace-number 5)
+    (defun vinid/set-wallpaper ()
+      (interactive)
+      ;; NOTE: You will need to update this to a valid background path!
+      (start-process-shell-command
+       "feh" nil  "feh --bg-scale /home/vinid/Pictures/Wallpapers/forest.jpg"))
   
-    ;; When window "class" updates, use it to set the buffer name
-    (add-hook 'exwm-update-class-hook #'vinid/exwm-update-class)
+    (use-package exwm
+      :config
+      ;; Set the default number of workspaces
+      (setq exwm-workspace-number 5)
   
-    ;; When EXWM starts up, do some extra configuration
-    (add-hook 'exwm-init-hook #'vinid/exwm-init-hook)
+      ;; When window "class" updates, use it to set the buffer name
+      (add-hook 'exwm-update-class-hook #'vinid/exwm-update-class)
   
-    (setq mouse-autoselect-window nil
-          focus-follows-mouse nil)
+      ;; When EXWM starts up, do some extra configuration
+      (add-hook 'exwm-init-hook #'vinid/exwm-init-hook)
   
-    ;; When window title updates, use it to set the buffer name
+      (setq mouse-autoselect-window nil
+            focus-follows-mouse nil)
   
-    (add-hook 'exwm-update-title-hook #'vinid/exwm-update-title)
-    ;; To add a key binding only available in line-mode, simply define it in
-    ;; `exwm-mode-map'.  The following example shortens 'C-c q' to 'C-q'.
-    (define-key exwm-mode-map [?\C-q] #'exwm-input-send-next-key)
+      ;; When window title updates, use it to set the buffer name
   
-    ;; adding a way to run apps
-    (exwm-input-set-key (kbd "s-SPC") 'counsel-linux-app)
+      (add-hook 'exwm-update-title-hook #'vinid/exwm-update-title)
+      ;; To add a key binding only available in line-mode, simply define it in
+      ;; `exwm-mode-map'.  The following example shortens 'C-c q' to 'C-q'.
+      (define-key exwm-mode-map [?\C-q] #'exwm-input-send-next-key)
   
-    ;; toggle fullscreen
-    (exwm-input-set-key (kbd "s-f") 'exwm-layout-toggle-fullscreen)
+      ;; adding a way to run apps
+      (exwm-input-set-key (kbd "\C-c SPC") 'counsel-linux-app) 
   
-    ;; Set the wallpaper after changing the resolution
-    (vinid/set-wallpaper)
   
-    ;; These keys should always pass through to Emacs
-    (setq exwm-input-prefix-keys
-          '(?\C-x
-            ?\C-u
-            ?\C-h
-            ?\M-x
-            ?\M-`
-            ?\M-&
-            ?\M-:
-            ?\C-\M-j  ;; Buffer list
-            ?\C-\ ))  ;; Ctrl+Space
+      ;; (counsel-linux-app)
+      ;; toggle fullscreen
+      (exwm-input-set-key (kbd "s-f") 'exwm-layout-toggle-fullscreen)
   
-    ;; Ctrl+Q will enable the next key to be sent directly
-    (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
+      ;; Set the wallpaper after changing the resolution
+      (vinid/set-wallpaper)
   
-    ;; The following example demonstrates how to use simulation keys to mimic
-    ;; the behavior of Emacs.  The value of `exwm-input-simulation-keys` is a
-    ;; list of cons cells (SRC . DEST), where SRC is the key sequence you press
-    ;; and DEST is what EXWM actually sends to application.  Note that both SRC
-    ;; and DEST should be key sequences (vector or string).
-    (setq exwm-input-simulation-keys
-          '(
-            ;; movement
-            ([?\C-b] . [left])
-            ([?\M-b] . [C-left])
-            ([?\C-f] . [right])
-            ([?\M-f] . [C-right])
-            ([?\C-p] . [up])
-            ([?\C-n] . [down])
-            ([?\C-a] . [home])
-            ([?\C-e] . [end])
-            ([?\M-v] . [prior])
-            ([?\C-v] . [next])
-            ([?\C-d] . [delete])
-            ([?\M-d] . [C-S-right delete])
-            ([?\C-k] . [S-end delete])
-            ;; cut paste
-            ([?\C-w] . [?\C-x])
-            ([?\M-w] . [?\C-c])
-            ([?\C-y] . [?\C-v])
-            ;; search
-            ([?\C-s] . [?\C-f])))
+      ;; These keys should always pass through to Emacs
+      (setq exwm-input-prefix-keys
+            '(?\C-x
+              ?\C-u
+              ?\C-h
+              ?\M-x
+              ?\M-`
+              ?\M-&
+              ?\M-:
+              ?\C-\M-j  ;; Buffer list
+              ?\C-\ ))  ;; Ctrl+Space
   
-    ;; Set up global key bindings.  These always work, no matter the input state!
-    ;; Keep in mind that changing this list after EXWM initializes has no effect.
-    (setq exwm-input-global-keys
-          `(
-            ;; Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
-            ([?\s-r] . exwm-reset)
+      ;; Ctrl+Q will enable the next key to be sent directly
+      (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
   
-            ;; Move between windows
-            ([s-left] . windmove-left)
-            ([s-right] . windmove-right)
-            ([s-up] . windmove-up)
-            ([s-down] . windmove-down)
+      ;; The following example demonstrates how to use simulation keys to mimic
+      ;; the behavior of Emacs.  The value of `exwm-input-simulation-keys` is a
+      ;; list of cons cells (SRC . DEST), where SRC is the key sequence you press
+      ;; and DEST is what EXWM actually sends to application.  Note that both SRC
+      ;; and DEST should be key sequences (vector or string).
+      (setq exwm-input-simulation-keys
+            '(
+              ;; movement
+              ([?\C-b] . [left])
+              ([?\M-b] . [C-left])
+              ([?\C-f] . [right])
+              ([?\M-f] . [C-right])
+              ([?\C-p] . [up])
+              ([?\C-n] . [down])
+              ([?\C-a] . [home])
+              ([?\C-e] . [end])
+              ([?\M-v] . [prior])
+              ([?\C-v] . [next])
+              ([?\C-d] . [delete])
+              ([?\M-d] . [C-S-right delete])
+              ([?\C-k] . [S-end delete])
+              ;; cut paste
+              ([?\C-w] . [?\C-x])
+              ([?\M-w] . [?\C-c])
+              ([?\C-y] . [?\C-v])
+              ;; search
+              ([?\C-s] . [?\C-f])))
   
-            ;; Launch applications via shell command
-            ([?\s-&] . (lambda (command)
-                         (interactive (list (read-shell-command "$ ")))
-                         (start-process-shell-command command nil command)))
   
-            ;; Switch workspace
-            ([?\s-w] . exwm-workspace-switch)
-            ([?\s-`] . (lambda () (interactive) (exwm-workspace-switch-create 0)))
+  ;; raise the specified app if it's already started, otherwise start it
+  ;; this should ideally raise buffer the previous buffer, not the current one
+  ;; meaning: if I had chrome on the right side and I call this from the left side
+  ;;          it should show up on the right side
   
-            ;; 's-N': Switch to certain workspace with Super (Win) plus a number key (0 - 9)
-            ,@(mapcar (lambda (i)
-                        `(,(kbd (format "s-%d" i)) .
-                          (lambda ()
-                            (interactive)
-                            (exwm-workspace-switch-create ,i))))
-                      (number-sequence 0 9))))
+  (defun vinid/run-or-raise (buffer-prefix &optional cmd)
+        (let ((existing-buffer
+                   (cl-dolist (buffer (buffer-list))
+                         (if (string-prefix-p buffer-prefix (buffer-name buffer))
+                                 (cl-return buffer)))))
+          (if existing-buffer
+                  ;; it's currently displayed, go to it
+                  (if (get-buffer-window existing-buffer)
+                                (message (format "%s" (pop-to-buffer existing-buffer)))
+                        (exwm-workspace-switch-to-buffer existing-buffer))
+                (start-process-shell-command buffer-prefix nil cmd))))
   
-    (exwm-input-set-key (kbd "s-SPC") 'counsel-linux-app)
   
-    (exwm-enable))
+    (defun goto-wm-logseq ()
+        "raise 'logseq'"		
+        (interactive)
+        (vinid/run-or-raise "Logseq" "flatpak run com.logseq.Logseq"))
+  
+  
+      ;; Set up global key bindings.  These always work, no matter the input state!
+      ;; Keep in mind that changing this list after EXWM initializes has no effect.
+      (setq exwm-input-global-keys
+            `(
+              ;; Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
+              ([?\s-r] . exwm-reset)
+  
+              ;; Move between windows
+              ([s-left] . windmove-left)
+              ([s-right] . windmove-right)
+              ([s-up] . windmove-up)
+              ([s-down] . windmove-down)
+  
+              ;; Launch applications via shell command
+              ([?\s-&] . (lambda (command)
+                           (interactive (list (read-shell-command "$ ")))
+                           (start-process-shell-command command nil command)))
+  
+              ;; Switch workspace
+              ([?\s-w] . exwm-workspace-switch)
+              ([?\s-`] . (lambda () (interactive) (exwm-workspace-switch-create 0)))
+  
+              ;; 's-N': Switch to certain workspace with Super (Win) plus a number key (0 - 9)
+              ,@(mapcar (lambda (i)
+                          `(,(kbd (format "s-%d" i)) .
+                            (lambda ()
+                              (interactive)
+                              (exwm-workspace-switch-create ,i))))
+                        (number-sequence 0 9))))
+  
+  
+  
+      (exwm-enable))
   
 #+end_src
 
@@ -738,7 +682,6 @@ All the configuration params currently used in EXWM.
     
 #+end_src
 
-
 * Apps
 
 ** Run in background function
@@ -762,444 +705,213 @@ This function allows to run a process in the background
 
 #+end_src
 
-** Dunst
-
-Dunst is used for notification
-
-#+begin_src emacs-lisp
-
-(vinid/run-in-background "dunst")
-
-#+end_src
-
-Notification structure
-
-#+begin_src conf :tangle ~/.config/dunst/dunstrc :mkdirp yes
-
-  [global]
-      ### Display ###
-      monitor = 0
-
-      # The geometry of the window:
-      #   [{width}]x{height}[+/-{x}+/-{y}]
-      geometry = "500x10-10+50"
-
-      # Show how many messages are currently hidden (because of geometry).
-      indicate_hidden = yes
-
-      # Shrink window if it's smaller than the width.  Will be ignored if
-      # width is 0.
-      shrink = no
-
-      # The transparency of the window.  Range: [0; 100].
-      transparency = 10
-
-      # The height of the entire notification.  If the height is smaller
-      # than the font height and padding combined, it will be raised
-      # to the font height and padding.
-      notification_height = 0
-
-      # Draw a line of "separator_height" pixel height between two
-      # notifications.
-      # Set to 0 to disable.
-      separator_height = 1
-      separator_color = frame
-
-      # Padding between text and separator.
-      padding = 8
-
-      # Horizontal padding.
-      horizontal_padding = 8
-
-      # Defines width in pixels of frame around the notification window.
-      # Set to 0 to disable.
-      frame_width = 2
-
-      # Defines color of the frame around the notification window.
-      frame_color = "#89AAEB"
-
-      # Sort messages by urgency.
-      sort = yes
-
-      # Don't remove messages, if the user is idle (no mouse or keyboard input)
-      # for longer than idle_threshold seconds.
-      idle_threshold = 120
-
-      ### Text ###
-
-      font = Cantarell 20
-
-      # The spacing between lines.  If the height is smaller than the
-      # font height, it will get raised to the font height.
-      line_height = 0
-      markup = full
-
-      # The format of the message.  Possible variables are:
-      #   %a  appname
-      #   %s  summary
-      #   %b  body
-      #   %i  iconname (including its path)
-      #   %I  iconname (without its path)
-      #   %p  progress value if set ([  0%] to [100%]) or nothing
-      #   %n  progress value if set without any extra characters
-      #   %%  Literal %
-      # Markup is allowed
-      format = "<b>%s</b>\n%b"
-
-      # Alignment of message text.
-      # Possible values are "left", "center" and "right".
-      alignment = left
-
-      # Show age of message if message is older than show_age_threshold
-      # seconds.
-      # Set to -1 to disable.
-      show_age_threshold = 60
-
-      # Split notifications into multiple lines if they don't fit into
-      # geometry.
-      word_wrap = yes
-
-      # When word_wrap is set to no, specify where to make an ellipsis in long lines.
-      # Possible values are "start", "middle" and "end".
-      ellipsize = middle
-
-      # Ignore newlines '\n' in notifications.
-      ignore_newline = no
-
-      # Stack together notifications with the same content
-      stack_duplicates = true
-
-      # Hide the count of stacked notifications with the same content
-      hide_duplicate_count = false
-
-      # Display indicators for URLs (U) and actions (A).
-      show_indicators = yes
-
-      ### Icons ###
-
-      # Align icons left/right/off
-      icon_position = left
-
-      # Scale larger icons down to this size, set to 0 to disable
-      max_icon_size = 88
-
-      ### History ###
-
-      # Should a notification popped up from history be sticky or timeout
-      # as if it would normally do.
-      sticky_history = no
-
-      # Maximum amount of notifications kept in history
-      history_length = 20
-
-      ### Misc/Advanced ###
-
-      # Browser for opening urls in context menu.
-      browser = qutebrowser
-
-      # Always run rule-defined scripts, even if the notification is suppressed
-      always_run_script = true
-
-      # Define the title of the windows spawned by dunst
-      title = Dunst
-
-      # Define the class of the windows spawned by dunst
-      class = Dunst
-
-      startup_notification = false
-      verbosity = mesg
-
-      # Define the corner radius of the notification window
-      # in pixel size. If the radius is 0, you have no rounded
-      # corners.
-      # The radius will be automatically lowered if it exceeds half of the
-      # notification height to avoid clipping text and/or icons.
-      corner_radius = 4
-
-      mouse_left_click = close_current
-      mouse_middle_click = do_action
-      mouse_right_click = close_all
-
-  # Experimental features that may or may not work correctly. Do not expect them
-  # to have a consistent behaviour across releases.
-  [experimental]
-      # Calculate the dpi to use on a per-monitor basis.
-      # If this setting is enabled the Xft.dpi value will be ignored and instead
-      # dunst will attempt to calculate an appropriate dpi value for each monitor
-      # using the resolution and physical size. This might be useful in setups
-      # where there are multiple screens with very different dpi values.
-      per_monitor_dpi = false
-
-  [shortcuts]
-
-      # Shortcuts are specified as [modifier+][modifier+]...key
-      # Available modifiers are "ctrl", "mod1" (the alt-key), "mod2",
-      # "mod3" and "mod4" (windows-key).
-      # Xev might be helpful to find names for keys.
-
-      # Close notification.
-      #close = ctrl+space
-
-      # Close all notifications.
-      #close_all = ctrl+shift+space
-
-      # Redisplay last message(s).
-      # On the US keyboard layout "grave" is normally above TAB and left
-      # of "1". Make sure this key actually exists on your keyboard layout,
-      # e.g. check output of 'xmodmap -pke'
-      history = ctrl+grave
-
-      # Context menu.
-      context = ctrl+shift+period
-
-  [urgency_low]
-      # IMPORTANT: colors have to be defined in quotation marks.
-      # Otherwise the "#" and following would be interpreted as a comment.
-      background = "#222222"
-      foreground = "#888888"
-      timeout = 10
-      # Icon for notifications with low urgency, uncomment to enable
-      #icon = /path/to/icon
-
-  [urgency_normal]
-      background = "#1c1f26"
-      foreground = "#ffffff"
-      timeout = 10
-      # Icon for notifications with normal urgency, uncomment to enable
-      #icon = /path/to/icon
-
-  [urgency_critical]
-      background = "#900000"
-      foreground = "#ffffff"
-      frame_color = "#ff0000"
-      timeout = 0
-      # Icon for notifications with critical urgency, uncomment to enable
-      #icon = /path/to/icon
-
-#+end_src
 
 
-#+begin_src bash
-
-pkill dunst && dunst &
-
-#+end_src
 
 ** Polybar
-
-#+begin_src emacs-lisp
-
-  (defun vinid/disable-desktop-notifications ()
-    (interactive) 
-    (start-process-shell-command "notify-send" nil "notify-send \"DUNST_COMMAND_PAUSE\""))
-
-  (defun vinid/enable-desktop-notifications ()
-    (interactive)
-    (start-process-shell-command "notify-send" nil "notify-send \"DUNST_COMMAND_RESUME\""))
-
-  (defun vinid/toggle-desktop-notifications ()
-    (interactive)
-    (start-process-shell-command "notify-send" nil "notify-send \"DUNST_COMMAND_TOGGLE\""))
-
-
-#+end_src
-
 
 Polybar serves as the main bar on the top of the screen
 
 
 #+begin_src shell :tangle /home/vinid/.config/polybar/config :mkdirp yes
- 
-; Docs: https://github.com/polybar/polybar
-;==========================================================
-[settings]
-screenchange-reload = true
-
-[global/wm]
-margin-top = 0
-margin-bottom = 0
-
-[colors]
-background = #f0232635
-background-alt = #576075
-foreground = #A6Accd
-foreground-alt = #555
-primary = #ffb52a
-secondary = #e60053
-alert = #bd2c40
-underline-1 = #c792ea
-
-[bar/panel]
-width = 100%
-height = 35
-offset-x = 0
-offset-y = 0
-fixed-center = true
-enable-ipc = true
-
-background = ${colors.background}
-foreground = ${colors.foreground}
-
-line-size = 2
-line-color = #f00
-
-border-size = 0
-border-color = #00000000
-
-padding-top = 5
-padding-left = 1
-padding-right = 1
-
-module-margin = 1
-
-font-0 = "Cantarell:size=14:weight=bold;2"
-font-1 = "Font Awesome:size=12;2"
-font-2 = "Material Icons:size=18;5"
-font-3 = "Fira Mono:size=11;-3"
-
-modules-left = exwm-workspace logo
-modules-right = cpu memory temperature battery date
-
-tray-position = right
-tray-padding = 2
-tray-maxsize = 28
-
-cursor-click = pointer
-cursor-scroll = ns-resize
-
-[module/exwm-workspace]
-type = custom/ipc
-hook-0 = emacsclient -e "exwm-workspace-current-index" | sed -e 's/^"//' -e 's/"$//'
-initial = 1
-format-padding = 1
-
-[module/cpu]
-type = internal/cpu
-interval = 2
-format = <label> <ramp-coreload>
-click-left = emacsclient -e "(proced)"
-label = %percentage:2%%
-ramp-coreload-spacing = 0
-ramp-coreload-0 = ▁
-ramp-coreload-0-foreground = ${colors.foreground-alt}
-ramp-coreload-1 = ▂
-ramp-coreload-2 = ▃
-ramp-coreload-3 = ▄
-ramp-coreload-4 = ▅
-ramp-coreload-5 = ▆
-ramp-coreload-6 = ▇
-
-[module/logo]
-type = custom/text
-content = λ
-
-[module/date]
-type = internal/date
-interval = 5
-
-date = "%a %b %e"
-date-alt = "%A %B %d %Y"
-
-time = %l:%M %p
-time-alt = %H:%M:%S
-
-format-prefix-foreground = ${colors.foreground-alt}
-
-label = %date% %time%
-
-[module/battery]
-type = internal/battery
-battery = BAT0
-adapter = ADP1
-full-at = 98
-time-format = %-l:%M
-
-label-charging = %percentage%% / %time%
-format-charging = <animation-charging> <label-charging>
-
-
-label-discharging = %percentage%% / %time%
-format-discharging = <ramp-capacity> <label-discharging>
-format-full = <ramp-capacity> <label-full>
-
-ramp-capacity-0 = 
-ramp-capacity-1 = 
-ramp-capacity-2 = 
-ramp-capacity-3 = 
-ramp-capacity-4 = 
-
-animation-charging-0 = 
-animation-charging-1 = 
-animation-charging-2 = 
-animation-charging-3 = 
-animation-charging-4 = 
-animation-charging-framerate = 750
-
-[module/memory]
-type = internal/memory
-interval = 5
-format-prefix = " "
-label = %gb_used%
-
-[module/temperature]
-type = internal/temperature
-thermal-zone = 0
-warn-temperature = 60
-
-format = <label>
-format-warn = <label-warn>
-format-warn-underline = ${self.format-underline}
-
-label = %temperature-c%
-label-warn = %temperature-c%!
-label-warn-foreground = ${colors.secondary}
-
+  
+  ; Docs: https://github.com/polybar/polybar
+  ;==========================================================
+  [settings]
+  screenchange-reload = true
+  
+  [global/wm]
+  margin-top = 0
+  margin-bottom = 0
+  
+  [colors]
+  background = #f0232635
+  background-alt = #576075
+  foreground = #A6Accd
+  foreground-alt = #555
+  primary = #ffb52a
+  secondary = #e60053
+  alert = #bd2c40
+  underline-1 = #c792ea
+  
+  [bar/panel]
+  width = 100%
+  height = 35
+  offset-x = 0
+  offset-y = 0
+  fixed-center = true
+  enable-ipc = true
+  
+  background = ${colors.background}
+  foreground = ${colors.foreground}
+  
+  line-size = 2
+  line-color = #f00
+  
+  border-size = 0
+  border-color = #00000000
+  
+  padding-top = 5
+  padding-left = 1
+  padding-right = 1
+  
+  module-margin = 1
+  
+  font-0 = "Cantarell:size=14:weight=bold;2"
+  font-1 = "Font Awesome:size=12;2"
+  font-2 = "Material Icons:size=18;5"
+  font-3 = "Fira Mono:size=11;-3"
+  
+  modules-left = exwm-workspace logo
+  modules-right = cpu memory temperature battery date
+  
+  tray-position = right
+  tray-padding = 2
+  tray-maxsize = 28
+  
+  cursor-click = pointer
+  cursor-scroll = ns-resize
+  
+  [module/exwm-workspace]
+  type = custom/ipc
+  hook-0 = emacsclient -e "exwm-workspace-current-index" | sed -e 's/^"//' -e 's/"$//'
+  initial = 1
+  format-padding = 1
+  
+  [module/cpu]
+  type = internal/cpu
+  interval = 2
+  format = <label> <ramp-coreload>
+  click-left = emacsclient -e "(proced)"
+  label = %percentage:2%%
+  ramp-coreload-spacing = 0
+  ramp-coreload-0 = ▁
+  ramp-coreload-0-foreground = ${colors.foreground-alt}
+  ramp-coreload-1 = ▂
+  ramp-coreload-2 = ▃
+  ramp-coreload-3 = ▄
+  ramp-coreload-4 = ▅
+  ramp-coreload-5 = ▆
+  ramp-coreload-6 = ▇
+  
+  [module/logo]
+  type = custom/text
+  content = T
+  
+  [module/date]
+  type = internal/date
+  interval = 5
+  
+  date = "%a %b %e"
+  date-alt = "%A %B %d %Y"
+  
+  time = %l:%M %p
+  time-alt = %H:%M:%S
+  
+  format-prefix-foreground = ${colors.foreground-alt}
+  
+  
+  label = %date% %time%
+  
+  [module/battery]
+  type = internal/battery
+  battery = BAT0
+  adapter = ADP1
+  full-at = 98
+  time-format = %-l:%M
+  
+  label-charging = %percentage%% / %time%
+  format-charging = <animation-charging> <label-charging>
+  
+  
+  label-discharging = %percentage%% / %time%
+  format-discharging = <ramp-capacity> <label-discharging>
+  format-full = <ramp-capacity> <label-full>
+  
+  ramp-capacity-0 = 
+  ramp-capacity-1 = 
+  ramp-capacity-2 = 
+  ramp-capacity-3 = 
+  ramp-capacity-4 = 
+  
+  animation-charging-0 = 
+  animation-charging-1 = 
+  animation-charging-2 = 
+  animation-charging-3 = 
+  animation-charging-4 = 
+  animation-charging-framerate = 750
+  
+  [module/memory]
+  type = internal/memory
+  interval = 5
+  format-prefix = " "
+  label = %gb_used%
+  
+  [module/temperature]
+  type = internal/temperature
+  thermal-zone = 0
+  warn-temperature = 60
+  
+  format = <label>
+  format-warn = <label-warn>
+  format-warn-underline = ${self.format-underline}
+  
+  label = %temperature-c%
+  label-warn = %temperature-c%!
+  label-warn-foreground = ${colors.secondary}
+  
 #+end_src
 
 Very simple polybar to have on top of the EXWM desktop environment
 
 #+begin_src emacs-lisp
-
-  (defvar vinid/polybar-process nil
-    "Holds the process of the running Polybar instance, if any")
-
-  (defun vinid/kill-panel ()
-    (interactive)
-    (when vinid/polybar-process
-      (ignore-errors
-        (kill-process vinid/polybar-process)))
-    (setq vinid/polybar-process nil))
-
-  (defun vinid/start-panel ()
-    (interactive)
-    (vinid/kill-panel)
-    (setq vinid/polybar-process (start-process-shell-command "polybar" nil "polybar panel")))
-
-  (defun vinid/send-polybar-hook (module-name hook-index)
-    (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook %s %s" module-name hook-index)))
-
-  (defun vinid/send-polybar-exwm-workspace ()
-    (vinid/send-polybar-hook "exwm-workspace" 1))
-
-  ;; Update panel indicator when workspace changes
-  (add-hook 'exwm-workspace-switch-hook #'vinid/send-polybar-exwm-workspace)
-  (vinid/start-panel)
-
-  (setq exwm-workspace-number 4)
-
-
-#+end_src 
-
-
+    
+    (defvar vinid/polybar-process nil
+      "Holds the process of the running Polybar instance, if any")
+    
+    (defun vinid/kill-panel ()
+      (interactive)
+      (when vinid/polybar-process
+        (ignore-errors
+          (kill-process vinid/polybar-process)))
+      (setq vinid/polybar-process nil))
+    
+    (defun vinid/start-panel ()
+      (interactive)
+      (vinid/kill-panel)
+      (setq vinid/polybar-process (start-process-shell-command "polybar" nil "polybar panel")))
+    
+    (defun vinid/send-polybar-hook (module-name hook-index)
+      (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook %s %s" module-name hook-index)))
+    
+    (defun vinid/send-polybar-exwm-workspace ()
+      (vinid/send-polybar-hook "exwm-workspace" 1))
+    
+    ;; Update panel indicator when workspace changes
+    (add-hook 'exwm-workspace-switch-hook #'vinid/send-polybar-exwm-workspace)
+    (vinid/start-panel)
+    
+    (setq exwm-workspace-number 4)
+    
+    (setq exwm-manage-force-tiling nil)
+    
+    ;; Automatically move EXWM buffer to current workspace when selected
+  (setq exwm-layout-show-all-buffers t)
+  
+  ;; Display all EXWM buffers in every workspace buffer list
+  (setq exwm-workspace-show-all-buffers t)
+    
+#+end_src
 
 ** Magit
 
 #+begin_src emacs-lisp
   
-  (use-package magit)
+(use-package magit)
   
 #+end_src
 ** Quick access to some of the files
+
 
 
 
@@ -1227,14 +939,14 @@ Very simple polybar to have on top of the EXWM desktop environment
 
 
 #+begin_src emacs-lisp
-
-   (global-set-key (kbd "C-ò") 'delete-backward-char)
+  
+  (global-set-key (kbd "C-ò") 'delete-backward-char)
+  (global-set-key (kbd "C-c e l") 'goto-wm-logseq)
 
 #+end_src
 
 
 ** 1passel
-
 
 1passel is a very simple utility I have built to manage 1password integration withing EXWM
 
@@ -1248,81 +960,10 @@ Very simple polybar to have on top of the EXWM desktop environment
 #+end_src
 
 
-** Mu4E
-
-Note that I made a bit of a mess configuring this. I am now using mu 1.6.3 but that should be installed from the tarball
-
-#+begin_src emacs-lisp
-    (use-package mu4e
-      :load-path "/home/vinid/.emacs.d/straight/repos/mu/mu4e/"
-      :defer 20
-      :config
-  
-      ;; This is set to 't' to avoid mail syncing issues when using mbsync
-      (setq mu4e-change-filenames-when-moving t)
-  
-      ;; Refresh mail using isync every 10 minutes
-      (setq mu4e-update-interval (* 10 60))
-      (setq mu4e-get-mail-command "mbsync -a")
-      (setq mu4e-maildir "~/Mail")
-  
-      (setq mu4e-contexts
-            (list
-             ;; Work account
-             (make-mu4e-context
-              :name "Personal"
-              :match-func
-              (lambda (msg)
-                (when msg
-                  (string-prefix-p "/Gmail" (mu4e-message-field msg :maildir))))
-              :vars '((user-mail-address . "chiccobia@gmail.com")
-                      (user-full-name    . "Federico Bianchi")
-                      (smtpmail-smtp-server  . "smtp.gmail.com")
-                      (smtpmail-smtp-service . 465)
-                      (smtpmail-stream-type  . ssl)
-                      (mu4e-drafts-folder  . "/Gmail/[Gmail]/Drafts")
-                      (mu4e-sent-folder  . "/Gmail/[Gmail]/Sent Mail")
-                      (mu4e-refile-folder  . "/Gmail/[Gmail]/All Mail")
-                      (mu4e-trash-folder  . "/Gmail/[Gmail]/Trash")))
-  
-             ;; Personal account
-             (make-mu4e-context
-              :name "Work"
-              :match-func
-              (lambda (msg)
-                (when msg
-                  (string-prefix-p "/Outlook" (mu4e-message-field msg :maildir))))
-              :vars '((user-mail-address . "f.bianchi@unibocconi.it")
-                      (user-full-name    . "Federico Bianchi")
-                      (mu4e-drafts-folder  . "/Outlook/Drafts")
-                      (mu4e-sent-folder  . "/Outlook/Sent")
-                      (mu4e-refile-folder  . "/Outlook/Archive")
-                      (mu4e-trash-folder  . "/Outlook/Posta eliminata")))))
-  
-      (setq mu4e-maildir-shortcuts
-            '(("/Inbox"             . ?i)
-              ("/Gmail/[Gmail]/Sent Mail" . ?s)
-              ("/Gmail/[Gmail]/Trash"     . ?t)
-              ("/Gmail/[Gmail]/Drafts"    . ?d)
-              ("/Gmail/[Gmail]/All Mail"  . ?a))))
-  
-    (setq mu4e-mu-binary "/usr/local/bin/mu")
-  
-    (setq mu4e-bookmarks
-          '((:name "Unread messages" :query "flag:unread AND NOT flag:trashed" :key ?i)
-            (:name "Today's messages" :query "date:today..now" :key ?t)
-              (:name "All Inboxes"  :query "(flag:unread AND maildir:/Outlook/Inbox) OR (maildir:/Gmail/Inbox AND flag:unread)"  :key ?b)
-              (:name "Last 7 days" :query "date:7d..now" :hide-unread t :key ?w)
-             (:name "Messages with images" :query "mime:image/*" :key ?p)))
-  
-  (mu4e t)
-  
-  
-  
-#+end_src
-
 * Reference
 
 This configuration is built around the one provided by David Wilson in his stream [[https://github.com/daviwil/emacs-from-scratch/blob/master/Emacs.org][Emacs From Scratch]]
 
 The org-mode configuration comes from different places but most of it comes from [[https://whhone.com/posts/org-mode-task-management/][Wai Hon's Blog]] and from [[https://emacs.cafe/emacs/orgmode/gtd/2017/06/30/orgmode-gtd.html][Nicolas Petton's Blog]].
+
+The code for the run-or-raise function has been taken from [[https://github.com/tedroden/dot-files/tree/636ee636b472078b6a22b2076eb21b5421f58c9b][Here]].
