@@ -386,69 +386,12 @@ Use package imports
     :custom
     (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
 
-  (use-package org-journal)
-
 #+end_src
 
-Setting the main variables
- 
-#+begin_src emacs-lisp
-  
-  (setq org-src-tab-acts-natively t)
-  (setq org-journal-dir "~/Dropbox/org/journal/")
-  (setq org-log-done t)
-  (setq org-journal-file-type 'weekly)
-  
-  
-  (define-key global-map "\C-ca" 'org-agenda)
-  (define-key global-map "\C-cl" 'org-store-link)
-  (global-set-key (kbd "C-c c") 'org-capture)
-  
-  
-  (setq org-agenda-files '(
-                           "~/Dropbox/org/gtd/gtd.org", "~/Dropbox/org/projects.org"))
-  
-  (setq org-capture-templates '(("t" "Todo [inbox]" entry
-                                 (file+headline "~/Dropbox/org/gtd/inbox.org" "Refiling")
-                                 "* TODO %i%?")))
-  
-  (setq org-refile-targets
-        '(("~/Dropbox/org/gtd/gtd.org" :maxlevel . 3)
-          ("~/Dropbox/org/gtd/archive.org" :maxlevel . 1)))
-  
-  ;; Save Org buffers after refiling!
-  (advice-add 'org-refile :after 'org-save-all-org-buffers)
-  
-  
-#+end_src
 
-Custom view to personalize the org-mode experience
+  
 
-#+BEGIN_SRC emacs-lisp
-  
-   (setq org-todo-keywords
-       '((sequence "TODO(t)" "NEXT(n)" "DONE(d)")))
-  
-  (setq org-agenda-span 'day)
-  
-  (setq org-todo-keyword-faces
-        (quote (("TODO" :foreground "red" :weight bold)
-                ("WAIT" :foreground "yellow" :weight bold)
-                ("NEXT" :foreground "orange" :weight bold)
-                ("DONE" :foreground "forest green" :weight bold))))
-  
-   (setq org-treat-S-cursor-todo-selection-as-state-change nil)
-  
-   (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
-  
-  (setq org-agenda-custom-commands
-    '(("n" "Agenda / NEXT / TODO"
-       ((agenda "" nil)
-        (todo "NEXT" nil)
-        (todo "TODO" nil))
-       nil)))
-  
-#+END_SRC
+
 
 
 ** Org-Mode
@@ -922,17 +865,7 @@ Very simple polybar to have on top of the EXWM desktop environment
       (interactive)
       (find-file "~/.emacs.d/emacs_configuration.org"))
 
-    (defun vinid/gtd-file ()
-      (interactive)
-      (find-file "~/Dropbox/org/gtd/gtd.org"))
-
-  (defun vinid/inbox-file ()
-      (interactive)
-      (find-file "~/Dropbox/org/gtd/inbox.org"))
-
     (global-set-key (kbd "C-c e c") 'vinid/emacs-configuration)
-    (global-set-key (kbd "C-c e g") 'vinid/gtd-file)
-    (global-set-key (kbd "C-c e r") 'vinid/inbox-file)
 
 #+end_src
 
@@ -964,6 +897,6 @@ Very simple polybar to have on top of the EXWM desktop environment
 
 This configuration is built around the one provided by David Wilson in his stream [[https://github.com/daviwil/emacs-from-scratch/blob/master/Emacs.org][Emacs From Scratch]]
 
-The org-mode configuration comes from different places but most of it comes from [[https://whhone.com/posts/org-mode-task-management/][Wai Hon's Blog]] and from [[https://emacs.cafe/emacs/orgmode/gtd/2017/06/30/orgmode-gtd.html][Nicolas Petton's Blog]].
+The org-mode configuration comes from different places but most of it comes from [[https://whhone.com/posts/org-mode-task-management/][Wai Hon's Blog]] and from [[https://emacs.cafe/emacs/orgmode/gtd/2017/06/30/orgmode-gtd.html][Nicolas Petton's Blog]]. (mostly
 
 The code for the run-or-raise function has been taken from [[https://github.com/tedroden/dot-files/tree/636ee636b472078b6a22b2076eb21b5421f58c9b][Here]].
