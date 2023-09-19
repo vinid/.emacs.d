@@ -1,9 +1,31 @@
 #+title: Emacs Configuration
 #+PROPERTY: header-args:emacs-lisp :tangle ./init.el :mkdirp yes
 
-
-
 * Initial Setting
+
+This is a list of things that might not work out of the bxo and that might require some manual work. It is probably possible to make this something that runs after fresh install.
+
+** Packages to Install Before
+
+There is a buch of additional packages I need to install before being able to run exwm (e.g., emacs). Makes
+sense to install this packages when there's a new fresh install.
+
+- compton
+- slock
+- xss-lock
+- dunst for notifications
+- fonts-firacode
+- fonts-cantarell
+- arandr
+
+#+begin_src
+    sudo apt install emacs git fonts-firacode fonts-cantarell compton slock xss-lock arandr dunst
+#+end_src
+
++ note that dropbox requires also to install the mini module to run commands (dropbox-nautilus?)
+  
+To see the icons one as also to run ;; M-x all-the-icons-install-fonts
+
 
 ** Setup
 
@@ -27,6 +49,7 @@ This symbolic link is used to connect the local desktop configuration with the o
 
 Bash script that initialize EXWM
 
+
 ** Installing stuff
 
 *** Straight.el
@@ -34,8 +57,8 @@ Bash script that initialize EXWM
 Straight is used to install packages
 
 #+begin_src emacs-lisp
-  
-    (defvar bootstrap-version)
+
+  (defvar bootstrap-version)
   (let ((bootstrap-file
          (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
         (bootstrap-version 5))
@@ -47,10 +70,10 @@ Straight is used to install packages
         (goto-char (point-max))
         (eval-print-last-sexp)))
     (load bootstrap-file nil 'nomessage))
-  
+
   (straight-use-package 'use-package)
   (setq straight-use-package-by-default t)
-  
+
 #+end_src
 
 
@@ -70,7 +93,6 @@ Straight is used to install packages
 #+end_src
 
 
-
 #+BEGIN_SRC emacs-lisp
 
   (tool-bar-mode -1)
@@ -86,15 +108,6 @@ Straight is used to install packages
 
 #+END_SRC
 
-Cleaning unused buffers
-
-#+begin_src emacs-lisp
-
-   (setq clean-buffer-list-delay-special (* 1 3600))
-   (setq clean-buffer-list-delay-general 1)
-   (global-set-key (kbd "C-c e b") 'clean-buffer-list)
-
-#+end_src
 
 
 ** Desktop Setup
@@ -118,7 +131,6 @@ A thing to keep in mind is that I had to set manually the dpi for xorg
   (set-face-attribute 'variable-pitch nil :font "Cantarell" :height vinid/default-variable-font-size :weight 'regular)
 
 
-  
   (use-package all-the-icons)
 
   (use-package spacegray-theme :defer t)
@@ -146,31 +158,11 @@ A thing to keep in mind is that I had to set manually the dpi for xorg
 #+end_src
 
 
-** Additional Packages
-
-Makes sense to install this packages when there's a nee fresh install
-+ compton
-+ slock
-+ xss-lock
-+ dunst for notifications 
-+ fonts-firacode
-+ fonts-cantarell
-+ arandr
-+ note that dropbox requires also to install the mini module to run commands (dropbox-nautilus?) 
-  
-
-#+begin_src
-    sudo apt install emacs git fonts-firacode fonts-cantarell compton slock xss-lock arandr dunst
-#+end_src
-
-To see the icons one as also to run ;; M-x all-the-icons-install-fonts
-
-
 * Other Emacs Packages
 
 This part of the configuration includes basic stuff needed to have a working emacs environment
 
-*** Ivy
+** Ivy
 
 #+begin_src emacs-lisp
 
@@ -253,7 +245,7 @@ This part of the configuration includes basic stuff needed to have a working ema
 
 #+end_src
 
-*** Dired
+** Dired
 
 #+begin_src emacs-lisp
 
@@ -296,7 +288,7 @@ This part of the configuration includes basic stuff needed to have a working ema
 
 #+end_src
 
-*** GPG setup
+** GPG setup
 
 Not sure why, but without this GPG takes a long time to call the prompt for the passwords (seems to be a known bug).
 
@@ -308,7 +300,7 @@ max-cache-ttl 86400
 no-allow-external-cache
 #+end_src
 
-*** Eshell
+** Eshell
 
 #+begin_src emacs-lisp
 
@@ -346,7 +338,7 @@ no-allow-external-cache
 
 #+end_src
 
-*** Org Mode
+** Org Mode
 
 **** Use package imports
 
@@ -370,11 +362,9 @@ no-allow-external-cache
 
 #+end_src
 
-**** Some Setup
+**** Font Setup for Org
 
 #+begin_src emacs-lisp
-
-
 
   (defun vinid/org-font-setup ()
     ;; Replace list hyphen with dot
@@ -431,19 +421,19 @@ no-allow-external-cache
   (defun vinid/vulpea-agenda-category ()
     "Get category of item at point for agenda.
 
-        Category is defined by one of the following items:
+          Category is defined by one of the following items:
 
-        - CATEGORY property
-        - TITLE keyword
-        - TITLE property
-        - filename without directory and extension
+          - CATEGORY property
+          - TITLE keyword
+          - TITLE property
+          - filename without directory and extension
 
-        Usage example:
+          Usage example:
 
-          (setq org-agenda-prefix-format
-                '((agenda . \" %(vulpea-agenda-category) %?-12t %12s\")))
+            (setq org-agenda-prefix-format
+                  '((agenda . \" %(vulpea-agenda-category) %?-12t %12s\")))
 
-        Refer to `org-agenda-prefix-format' for more information."
+          Refer to `org-agenda-prefix-format' for more information."
     (let* ((file-name (when buffer-file-name
                         (file-name-sans-extension
                          (file-name-nondirectory buffer-file-name))))
@@ -465,19 +455,74 @@ no-allow-external-cache
          (match-beginning 1)
          (match-end 1)))))
 
+  (setq orgroam-elisp-folder  "~/Dropbox/org/orgroam/")
+
   (defun vinid/find-files-starting-with-project ()
-    (let ((files (directory-files "~/Dropbox/org/orgroam")))
-      (cl-loop for file in  files if (string-match-p "project" file)   collect  file)))
+    (let ((files (directory-files orgroam-elisp-folder)))
+      (cl-loop for file in  files if (string-match-p "project" file)   collect  (concat orgroam-elisp-folder file))))
 
   (vinid/find-files-starting-with-project)
 
-  (setq org-agenda-files  (cons "~/Dropbox/org/orgmode/todos.org" (vinid/find-files-starting-with-project)))
+  (setq org-agenda-files (cons "~/Dropbox/org/orgmode/todos.org" (vinid/find-files-starting-with-project)))
 
  #+end_src
 
+Custom Org Agenda view from https://github.com/james-stoup/emacs-org-mode-tutorial#orgd080503
+
+#+begin_src emacs-lisp
+
+    ;; Agenda View "d"
+  (defun air-org-skip-subtree-if-priority (priority)
+    "Skip an agenda subtree if it has a priority of PRIORITY.
+
+    PRIORITY may be one of the characters ?A, ?B, or ?C."
+    (let ((subtree-end (save-excursion (org-end-of-subtree t)))
+          (pri-value (* 1000 (- org-lowest-priority priority)))
+          (pri-current (org-get-priority (thing-at-point 'line t))))
+      (if (= pri-value pri-current)
+          subtree-end
+        nil)))
+
+  (setq org-agenda-skip-deadline-if-done t)
+
+  (setq org-agenda-skip-scheduled-if-done t)
+
+  (setq org-agenda-custom-commands
+        '(
+          ;; Daily Agenda & TODOs
+          ("d" "Daily agenda and all TODOs"
+
+           ;; Display items with priority A
+           ((tags "PRIORITY=\"A\""
+                  ((org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
+                   (org-agenda-overriding-header "High-priority unfinished tasks:")))
+
+            ;; View 3 days in the calendar view
+            (agenda "" ((org-agenda-span 3)))
+
+            ;; Display items with priority B (really it is view all items minus A & C)
+            (alltodo ""
+                     ((org-agenda-skip-function '(or (air-org-skip-subtree-if-priority ?A)
+                                                     (air-org-skip-subtree-if-priority ?C)
+                                                     (org-agenda-skip-if nil '(scheduled deadline))))
+                      (org-agenda-overriding-header "ALL normal priority tasks:")))
+
+            ;; Display items with pirority C
+            (tags "PRIORITY=\"C\""
+                  ((org-agenda-skip-function '(org-agenda-skip-entry-if 'todo 'done))
+                   (org-agenda-overriding-header "Low-priority Unfinished tasks:")))
+            )
+
+           ;; Don't compress things (change to suite your tastes)
+           ((org-agenda-compact-blocks nil)))
+          ))   
+
+#+end_src
+ 
+
 **** Org Babel
 
-To execute or export code in =org-mode= code blocks, you'll need to set up =org-babel-load-languages= for each language you'd like to use. [[https://orgmode.org/worg/org-contrib/babel/languages.html][This page]] documents all of the languages that you can use with =org-babel=.
+To execute or export code in =org-mode= code blocks, you'll need to set up =org-babel-load-languages= for each language you'd like to use. 
 
 #+begin_src emacs-lisp
 
@@ -505,12 +550,11 @@ This snippet adds a hook to =org-mode= buffers so that =vinid/org-babel-tangle-c
     (add-hook 'org-mode-hook (lambda () (add-hook 'after-save-hook #'vinid/org-babel-tangle-config)))
 
 (setq org-capture-templates
-    '(("c" "TODO" entry (file+datetree "~/Dropbox/org/orgmode/index.org")
+    '(("c" "TODO" entry (file+datetree "~/Dropbox/org/orgmode/inbox.org")
       "* TODO %?\n  %i")))
 #+end_src
 
-
-*** Org Roam
+** Org Roam
 
 #+begin_src emacs-lisp
 
@@ -534,232 +578,6 @@ This snippet adds a hook to =org-mode= buffers so that =vinid/org-babel-tangle-c
   (require 'org-roam-protocol))
   
 #+end_src
-
-
-* EXWM
-
-** Run or Raise
-
-from git:tedroden
-
-
-
-
-** Basic Setup
-All the configuration params currently used in EXWM.
-
-
-#+begin_src emacs-lisp
-  (server-start)
-
-  (setq mouse-autoselect-window t
-	focus-follows-mouse t)
-
-    (defun vinid/exwm-init-hook ()
-      ;; Make workspace 1 be the one where we land at startup
-      (exwm-workspace-switch-create 1))
-
-
-    (defun vinid/exwm-update-class ()
-      (exwm-workspace-rename-buffer exwm-class-name))
-    ;; defines a function that makes a nicer visualization for the firefox tab
-    (defun vinid/exwm-update-title ()
-      (pcase exwm-class-name
-	("Firefox" (exwm-workspace-rename-buffer (format "Firefox: %s" exwm-title)))))
-
-    (defun vinid/set-wallpaper ()
-      (interactive)
-      ;; NOTE: You will need to update this to a valid background path!
-      (start-process-shell-command
-       "feh" nil  "feh --bg-scale /home/vinid/Pictures/wall.jpg"))
-
-    (use-package exwm
-      :config
-      ;; Set the default number of workspaces
-      (setq exwm-workspace-number 5)
-
-      ;; When window "class" updates, use it to set the buffer name
-      (add-hook 'exwm-update-class-hook #'vinid/exwm-update-class)
-
-      ;; When EXWM starts up, do some extra configuration
-      (add-hook 'exwm-init-hook #'vinid/exwm-init-hook)
-
-      (setq mouse-autoselect-window nil
-	    focus-follows-mouse nil)
-
-      ;; When window title updates, use it to set the buffer name
-
-      (add-hook 'exwm-update-title-hook #'vinid/exwm-update-title)
-      ;; To add a key binding only available in line-mode, simply define it in
-      ;; `exwm-mode-map'.  The following example shortens 'C-c q' to 'C-q'.
-      (define-key exwm-mode-map [?\C-q] #'exwm-input-send-next-key)
-
-      ;; adding a way to run apps
-      (exwm-input-set-key (kbd "\C-c SPC") 'counsel-linux-app) 
-
-
-      ;; (counsel-linux-app)
-      ;; toggle fullscreen
-      (exwm-input-set-key (kbd "s-f") 'exwm-layout-toggle-fullscreen)
-
-      ;; Set the wallpaper after changing the resolution
-      (vinid/set-wallpaper)
-
-      ;; These keys should always pass through to Emacs
-      (setq exwm-input-prefix-keys
-	    '(?\C-x
-	      ?\C-u
-	      ?\C-h
-	      ?\M-x
-	      ?\M-`
-	      ?\M-&
-	      ?\M-:
-	      ?\C-\M-j  ;; Buffer list
-	      ?\C-\ ))  ;; Ctrl+Space
-
-      ;; Ctrl+Q will enable the next key to be sent directly
-      (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
-
-      ;; The following example demonstrates how to use simulation keys to mimic
-      ;; the behavior of Emacs.  The value of `exwm-input-simulation-keys` is a
-      ;; list of cons cells (SRC . DEST), where SRC is the key sequence you press
-      ;; and DEST is what EXWM actually sends to application.  Note that both SRC
-      ;; and DEST should be key sequences (vector or string).
-      (setq exwm-input-simulation-keys
-	    '(
-	      ;; movement
-	      ([?\C-b] . [left])
-	      ([?\M-b] . [C-left])
-	      ([?\C-f] . [right])
-	      ([?\M-f] . [C-right])
-	      ([?\C-p] . [up])
-	      ([?\C-n] . [down])
-	      ([?\C-a] . [home])
-	      ([?\C-e] . [end])
-	      ([?\M-v] . [prior])
-	      ([?\C-h] . [left delete])
-	      ([?\C-v] . [next])
-	      ([?\C-d] . [delete])
-	      ([?\M-d] . [C-S-right delete])
-	      ([?\C-k] . [S-end delete])
-	      ;; cut paste
-	      ([?\C-w] . [?\C-x])
-	      ([?\M-w] . [?\C-c])
-	      ([?\C-y] . [?\C-v])
-	      ;; search
-	      ([?\C-s] . [?\C-f])))
-
-
-  ;; raise the specified app if it's already started, otherwise start it
-  ;; this should ideally raise buffer the previous buffer, not the current one
-  ;; meaning: if I had chrome on the right side and I call this from the left side
-  ;;          it should show up on the right side
-
-  (defun vinid/run-or-raise (buffer-prefix &optional cmd)
-	(let ((existing-buffer
-		   (cl-dolist (buffer (buffer-list))
-			 (if (string-prefix-p buffer-prefix (buffer-name buffer))
-				 (cl-return buffer)))))
-	  (if existing-buffer
-		  ;; it's currently displayed, go to it
-		  (if (get-buffer-window existing-buffer)
-				(message (format "%s" (pop-to-buffer existing-buffer)))
-			(exwm-workspace-switch-to-buffer existing-buffer))
-		(start-process-shell-command buffer-prefix nil cmd))))
-
-
-    (defun goto-wm-logseq ()
-	"raise 'logseq'"		
-	(interactive)
-	(vinid/run-or-raise "Logseq" "flatpak run com.logseq.Logseq"))
-
-
-      ;; Set up global key bindings.  These always work, no matter the input state!
-      ;; Keep in mind that changing this list after EXWM initializes has no effect.
-      (setq exwm-input-global-keys
-	    `(
-	      ;; Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
-	      ([?\s-r] . exwm-reset)
-
-	      ;; Move between windows
-	      ([s-left] . windmove-left)
-	      ([s-right] . windmove-right)
-	      ([s-up] . windmove-up)
-	      ([s-down] . windmove-down)
-
-	      ;; Launch applications via shell command
-	      ([?\s-&] . (lambda (command)
-			   (interactive (list (read-shell-command "$ ")))
-			   (start-process-shell-command command nil command)))
-
-	      ;; Switch workspace
-	      ([?\s-w] . exwm-workspace-switch)
-	      ([?\s-`] . (lambda () (interactive) (exwm-workspace-switch-create 0)))
-
-	      ;; 's-N': Switch to certain workspace with Super (Win) plus a number key (0 - 9)
-	      ,@(mapcar (lambda (i)
-			  `(,(kbd (format "s-%d" i)) .
-			    (lambda ()
-			      (interactive)
-			      (exwm-workspace-switch-create ,i))))
-			(number-sequence 0 9))))
-
-
-
-      (exwm-enable))
-
-#+end_src
-
-** Configuration for the multiple screens
-
-#+begin_src emacs-lisp
-      
-    (require 'exwm-randr)
-    
-    (exwm-randr-enable)
-    
-    (setq exwm-randr-workspace-monitor-plist '(2 "HDMI-1-2"))
-    
-    (setq exwm-workspace-warp-cursor t)
-    
-    
-                                            ;  (defun vinid/update-displays ()
-                                            ;    (vinid/run-in-background "autorandr --change --force")
-                                            ;    (message "Display config: %s"
-                                            ;             (string-trim (shell-command-to-string "autorandr --current"))))
-    
-                                            ;  (add-hook 'exwm-randr-screen-change-hook #'vinid/update-displays)
-                                            ;  (vinid/update-displays)
-    
-    
-    
-#+end_src
-
-
-* Apps
-
-** Run in background function
-
-
-This function allows to run a process in the background
-
-#+begin_src emacs-lisp
-
-  (defun vinid/run-in-background (command)
-     (let ((command-parts (split-string command "[ ]+")))
-       (apply #'call-process `(,(car command-parts) nil 0 nil ,@(cdr command-parts)))))
-
-#+end_src
-
-** Dropbox
-
-#+begin_src emacs-lisp
-
-(vinid/run-in-background "dropbox start")
-
-#+end_src
-
-
 
 ** Polybar
 
@@ -967,6 +785,231 @@ Very simple polybar to have on top of the EXWM desktop environment
 (use-package magit)
   
 #+end_src
+
+* EXWM
+
+** Run or Raise
+
+from git:tedroden
+
+
+
+
+** Basic Setup
+All the configuration params currently used in EXWM.
+
+
+#+begin_src emacs-lisp
+  (server-start)
+
+  (setq mouse-autoselect-window t
+	focus-follows-mouse t)
+
+    (defun vinid/exwm-init-hook ()
+      ;; Make workspace 1 be the one where we land at startup
+      (exwm-workspace-switch-create 1))
+
+    (defun vinid/exwm-update-class ()
+      (exwm-workspace-rename-buffer exwm-class-name))
+    ;; defines a function that makes a nicer visualization for the firefox tab
+    (defun vinid/exwm-update-title ()
+      (pcase exwm-class-name
+	("Firefox" (exwm-workspace-rename-buffer (format "Firefox: %s" exwm-title)))))
+
+    (defun vinid/set-wallpaper ()
+      (interactive)
+      ;; NOTE: You will need to update this to a valid background path!
+      (start-process-shell-command
+       "feh" nil  "feh --bg-scale /home/vinid/Pictures/wall.jpg"))
+
+    (use-package exwm
+      :config
+      ;; Set the default number of workspaces
+      (setq exwm-workspace-number 5)
+
+      ;; When window "class" updates, use it to set the buffer name
+      (add-hook 'exwm-update-class-hook #'vinid/exwm-update-class)
+
+      ;; When EXWM starts up, do some extra configuration
+      (add-hook 'exwm-init-hook #'vinid/exwm-init-hook)
+
+      (setq mouse-autoselect-window nil
+	    focus-follows-mouse nil)
+
+      ;; When window title updates, use it to set the buffer name
+
+      (add-hook 'exwm-update-title-hook #'vinid/exwm-update-title)
+      ;; To add a key binding only available in line-mode, simply define it in
+      ;; `exwm-mode-map'.  The following example shortens 'C-c q' to 'C-q'.
+      (define-key exwm-mode-map [?\C-q] #'exwm-input-send-next-key)
+
+      ;; adding a way to run apps
+      (exwm-input-set-key (kbd "\C-c SPC") 'counsel-linux-app) 
+
+
+      ;; (counsel-linux-app)
+      ;; toggle fullscreen
+      (exwm-input-set-key (kbd "s-f") 'exwm-layout-toggle-fullscreen)
+
+      ;; Set the wallpaper after changing the resolution
+      (vinid/set-wallpaper)
+
+      ;; These keys should always pass through to Emacs
+      (setq exwm-input-prefix-keys
+	    '(?\C-x
+	      ?\C-u
+	      ?\C-h
+	      ?\M-x
+	      ?\M-`
+	      ?\M-&
+	      ?\M-:
+	      ?\C-\M-j  ;; Buffer list
+	      ?\C-\ ))  ;; Ctrl+Space
+
+      ;; Ctrl+Q will enable the next key to be sent directly
+      (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
+
+      ;; The following example demonstrates how to use simulation keys to mimic
+      ;; the behavior of Emacs.  The value of `exwm-input-simulation-keys` is a
+      ;; list of cons cells (SRC . DEST), where SRC is the key sequence you press
+      ;; and DEST is what EXWM actually sends to application.  Note that both SRC
+      ;; and DEST should be key sequences (vector or string).
+      (setq exwm-input-simulation-keys
+	    '(
+	      ;; movement
+	      ([?\C-b] . [left])
+	      ([?\M-b] . [C-left])
+	      ([?\C-f] . [right])
+	      ([?\M-f] . [C-right])
+	      ([?\C-p] . [up])
+	      ([?\C-n] . [down])
+	      ([?\C-a] . [home])
+	      ([?\C-e] . [end])
+	      ([?\M-v] . [prior])
+	      ([?\C-h] . [left delete])
+	      ([?\C-v] . [next])
+	      ([?\C-d] . [delete])
+	      ([?\M-d] . [C-S-right delete])
+	      ([?\C-k] . [S-end delete])
+	      ;; cut paste
+	      ([?\C-w] . [?\C-x])
+	      ([?\M-w] . [?\C-c])
+	      ([?\C-y] . [?\C-v])
+	      ;; search
+	      ([?\C-s] . [?\C-f])))
+
+
+  ;; raise the specified app if it's already started, otherwise start it
+  ;; this should ideally raise buffer the previous buffer, not the current one
+  ;; meaning: if I had chrome on the right side and I call this from the left side
+  ;;          it should show up on the right side
+
+  (defun vinid/run-or-raise (buffer-prefix &optional cmd)
+	(let ((existing-buffer
+		   (cl-dolist (buffer (buffer-list))
+			 (if (string-prefix-p buffer-prefix (buffer-name buffer))
+				 (cl-return buffer)))))
+	  (if existing-buffer
+		  ;; it's currently displayed, go to it
+		  (if (get-buffer-window existing-buffer)
+				(message (format "%s" (pop-to-buffer existing-buffer)))
+			(exwm-workspace-switch-to-buffer existing-buffer))
+		(start-process-shell-command buffer-prefix nil cmd))))
+
+
+    (defun goto-wm-logseq ()
+	"raise 'logseq'"		
+	(interactive)
+	(vinid/run-or-raise "Logseq" "flatpak run com.logseq.Logseq"))
+
+
+      ;; Set up global key bindings.  These always work, no matter the input state!
+      ;; Keep in mind that changing this list after EXWM initializes has no effect.
+      (setq exwm-input-global-keys
+	    `(
+	      ;; Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
+	      ([?\s-r] . exwm-reset)
+
+	      ;; Move between windows
+	      ([s-left] . windmove-left)
+	      ([s-right] . windmove-right)
+	      ([s-up] . windmove-up)
+	      ([s-down] . windmove-down)
+
+	      ;; Launch applications via shell command
+	      ([?\s-&] . (lambda (command)
+			   (interactive (list (read-shell-command "$ ")))
+			   (start-process-shell-command command nil command)))
+
+	      ;; Switch workspace
+	      ([?\s-w] . exwm-workspace-switch)
+	      ([?\s-`] . (lambda () (interactive) (exwm-workspace-switch-create 0)))
+
+	      ;; 's-N': Switch to certain workspace with Super (Win) plus a number key (0 - 9)
+	      ,@(mapcar (lambda (i)
+			  `(,(kbd (format "s-%d" i)) .
+			    (lambda ()
+			      (interactive)
+			      (exwm-workspace-switch-create ,i))))
+			(number-sequence 0 9))))
+
+
+
+      (exwm-enable))
+
+#+end_src
+
+** Configuration for the multiple screens
+
+#+begin_src emacs-lisp
+      
+    (require 'exwm-randr)
+    
+    (exwm-randr-enable)
+    
+    (setq exwm-randr-workspace-monitor-plist '(2 "HDMI-1-2"))
+    
+    (setq exwm-workspace-warp-cursor t)
+    
+    
+                                            ;  (defun vinid/update-displays ()
+                                            ;    (vinid/run-in-background "autorandr --change --force")
+                                            ;    (message "Display config: %s"
+                                            ;             (string-trim (shell-command-to-string "autorandr --current"))))
+    
+                                            ;  (add-hook 'exwm-randr-screen-change-hook #'vinid/update-displays)
+                                            ;  (vinid/update-displays)
+    
+    
+    
+#+end_src
+
+
+* Apps
+
+** Run in background function
+
+
+This function allows to run a process in the background
+
+#+begin_src emacs-lisp
+
+  (defun vinid/run-in-background (command)
+     (let ((command-parts (split-string command "[ ]+")))
+       (apply #'call-process `(,(car command-parts) nil 0 nil ,@(cdr command-parts)))))
+
+#+end_src
+
+** Dropbox
+
+#+begin_src emacs-lisp
+
+(vinid/run-in-background "dropbox start")
+
+#+end_src
+
+
+
 ** Quick access to some of the files
 
 
@@ -983,18 +1026,36 @@ Very simple polybar to have on top of the EXWM desktop environment
     (interactive)
     (find-file "~/Dropbox/org/orgmode/todos.org"))
 
+ (defun vinid/open-inbox ()
+    (interactive)
+    (find-file "~/Dropbox/org/orgmode/inbox.org"))
+
 
 #+end_src
 
 ** Miscellanea Keybindings
 
+
+Cleaning unused buffers
+
 #+begin_src emacs-lisp
+
+   (setq clean-buffer-list-delay-special (* 1 3600))
+   (setq clean-buffer-list-delay-general 1)
+   (global-set-key (kbd "C-c e b") 'clean-buffer-list)
+
+#+end_src
+
+#+begin_src emacs-lisp
+  
   (global-set-key (kbd "M-?") 'help-command)
   (global-set-key (kbd "C-h") 'delete-backward-char)
-  (global-set-key (kbd "C-c e l") 'goto-wm-logseq)
+
   (global-set-key (kbd "C-c c") 'org-capture)
+  (global-set-key (kbd "C-c a") 'org-agenda)
   (global-set-key (kbd "C-c e c") 'vinid/emacs-configuration)
   (global-set-key (kbd "C-c e t") 'vinid/open-todolist)
+  (global-set-key (kbd "C-c e i") 'vinid/open-inbox)
 #+end_src
 
 
@@ -1129,22 +1190,26 @@ Very simple polybar to have on top of the EXWM desktop environment
           '<alt-n>': 'command-history-next',
 
           # escape hatch
-          '<ctrl-g>': 'leave-mode',
+          '<ctrl-g>': 'mode-leave',
   }
 
   c.bindings.commands['hint'] = {
           # escape hatch
-          '<ctrl-g>': 'leave-mode',
+          '<ctrl-g>': 'mode-leave',
   }
 
 
   c.bindings.commands['caret'] = {
           # escape hatch
-          '<ctrl-g>': 'leave-mode',
+          '<ctrl-g>': 'mode-leave',
   }
   
   
 #+end_src
+
+
+
+
 * Reference
 
 This configuration is built around the one provided by David Wilson in his stream [[https://github.com/daviwil/emacs-from-scratch/blob/master/Emacs.org][Emacs From Scratch]]
