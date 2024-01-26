@@ -5,6 +5,21 @@
 
 This is a list of things that might not work out of the bxo and that might require some manual work. It is probably possible to make this something that runs after fresh install.
 
+The following is important to fix viz stuff (e.g., xft.dpi fix font for gtk apps; usually i have problems when attaching a monitor)
+
+#+begin_src
+
+vinid@jester:~/opt/pycharm$ cat ../../.xinitrc
+export _JAVA_AWT_WM_NONREPARENTING=1
+
+vinid@jester:~/opt/pycharm$ cat ../../.Xresources 
+Xft.dpi: 125
+Xcursor*theme: whiteglass
+Xcursor*size: 32
+
+  
+#+end_src
+
 ** Packages to Install Before
 
 There is a buch of additional packages I need to install before being able to run exwm (e.g., emacs). Makes
@@ -17,6 +32,8 @@ sense to install this packages when there's a new fresh install.
 - fonts-firacode
 - fonts-cantarell
 - arandr
+
+  Hopefully the following command install most things
 
 #+begin_src
     sudo apt install emacs git fonts-firacode fonts-cantarell compton slock xss-lock arandr dunst
@@ -110,50 +127,41 @@ Straight is used to install packages
 
 #+END_SRC
 
-
 ** Desktop Setup
 
 A thing to keep in mind is that I had to set manually the dpi for xorg
 
 #+begin_src emacs-lisp
 
-  (defvar vinid/default-font-size 140)
-  (defvar vinid/default-variable-font-size 140)
+   (defvar vinid/default-font-size 140)
+   (defvar vinid/default-variable-font-size 140)
 
-  ;; Make frame transparency overridable
-  (defvar vinid/frame-transparency '(90 . 90))
+   (set-face-attribute 'default nil :font "Fira Code Retina" :height vinid/default-font-size)
 
-  (set-face-attribute 'default nil :font "Fira Code Retina" :height vinid/default-font-size)
+   ;; Set the fixed pitch face
+   (set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height vinid/default-font-size)
 
-  ;; Set the fixed pitch face
-  (set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height vinid/default-font-size)
+   ;; Set the variable pitch face
+   (set-face-attribute 'variable-pitch nil :font "Cantarell" :height vinid/default-variable-font-size :weight 'regular)
 
-  ;; Set the variable pitch face
-  (set-face-attribute 'variable-pitch nil :font "Cantarell" :height vinid/default-variable-font-size :weight 'regular)
+   (use-package all-the-icons)
 
-  (use-package all-the-icons)
+   (ido-mode 1)
 
-  (use-package spacegray-theme :defer t)
-  (use-package doom-themes
-    :init (load-theme 'doom-palenight t))
+   (global-display-line-numbers-mode t)
 
-  (ido-mode 1)
+  
 
-  (global-display-line-numbers-mode t)
+   (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
+   (add-to-list 'default-frame-alist '(fullscreen . maximized))
 
-  (set-frame-parameter (selected-frame) 'alpha vinid/frame-transparency)
-  (add-to-list 'default-frame-alist `(alpha . ,vinid/frame-transparency))
-
-  (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
-  (add-to-list 'default-frame-alist '(fullscreen . maximized))
-
-  ;; Disable line numbers for some modes
-  (dolist (mode '(org-mode-hook
-                  term-mode-hook
-                  shell-mode-hook
-                  treemacs-mode-hook
-                  eshell-mode-hook))
-    (add-hook mode (lambda () (display-line-numbers-mode 0))))
+   ;; Disable line numbers for some modes
+   (dolist (mode '(org-mode-hook
+                   term-mode-hook
+                   shell-mode-hook
+                   treemacs-mode-hook
+                   eshell-mode-hook))
+     (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
 #+end_src
 
@@ -201,8 +209,6 @@ This part of the configuration includes basic stuff needed to have a working ema
 
 #+end_src
 
-
-
 #+begin_src emacs-lisp 
 
   (use-package rainbow-delimiters
@@ -243,14 +249,13 @@ This part of the configuration includes basic stuff needed to have a working ema
     :bind (("C-x C-j" . dired-jump))
     :custom ((dired-listing-switches "-agho --group-directories-first")))
 
-
-
   (use-package dired-single)
 
-  ; to avoid creating infinite buffers with dired. I am not sure if this is working or not
+                                          ; to avoid creating infinite buffers with dired. I am not sure if this is working or not
+
   (defun my-dired-init ()
     "Bunch of stuff to run for dired, either immediately or when it's
-     loaded."
+         loaded."
     ;; <add other stuff here>
     (define-key dired-mode-map [remap dired-find-file]
       'dired-single-buffer)
@@ -328,6 +333,8 @@ no-allow-external-cache
 
 ** Org Mode
 
+As it stands, most of the configuration is then setted again by NANO Emacs.
+
 **** Use package imports
 
 #+begin_src emacs-lisp
@@ -362,38 +369,13 @@ no-allow-external-cache
 
 #+begin_src emacs-lisp
 
-  (defun vinid/org-font-setup ()
-    ;; Replace list hyphen with dot
-    (font-lock-add-keywords 'org-mode
-			    '(("^ *\\([-]\\) "
-			       (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
-
-    ;; Set faces for heading levels
-    (dolist (face '((org-level-1 . 1.2)
-		    (org-level-2 . 1.1)
-		    (org-level-3 . 1.05)
-		    (org-level-4 . 1.0)
-		    (org-level-5 . 1.1)
-		    (org-level-6 . 1.1)
-		    (org-level-7 . 1.1)
-		    (org-level-8 . 1.1)))
-      (set-face-attribute (car face) nil :font "Cantarell" :weight 'regular :height (cdr face)))
-
-    ;; Ensure that anything that should be fixed-pitch in Org files appears that way
-    (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
-    (set-face-attribute 'org-code nil   :inherit '(shadow fixed-pitch))
-    (set-face-attribute 'org-table nil   :inherit '(shadow fixed-pitch))
-    (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
-    (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
-    (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
-    (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch))
-
     (setq org-adapt-indentation t)
 
     (defun vinid/org-mode-setup ()
       (org-indent-mode)
       (variable-pitch-mode 1)
       (visual-line-mode 1))
+    
     (set-fringe-mode 0) 
 #+end_src
 
@@ -495,7 +477,8 @@ This snippet adds a hook to =org-mode= buffers so that =vinid/org-babel-tangle-c
       "* TODO %?\n  %i")))
 #+end_src
 
-** Org Roam
+
+**** Org Roam
 
 #+begin_src emacs-lisp
 (use-package org-roam
@@ -517,6 +500,7 @@ This snippet adds a hook to =org-mode= buffers so that =vinid/org-babel-tangle-c
   (require 'org-roam-protocol))
   
 #+end_src
+
 
 ** Polybar
 
@@ -799,6 +783,7 @@ All the configuration params currently used in EXWM.
               ?\C-\M-j  ;; Buffer list
               ?\C-\ ))  ;; Ctrl+Space
 
+      
       ;; Ctrl+Q will enable the next key to be sent directly
       (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
 
@@ -893,26 +878,26 @@ All the configuration params currently used in EXWM.
 ** Configuration for the multiple screens
 
 #+begin_src emacs-lisp
-      
-    (require 'exwm-randr)
-    
-    (exwm-randr-enable)
-    
-    (setq exwm-randr-workspace-monitor-plist '(2 "HDMI-1-2"))
-    
-    (setq exwm-workspace-warp-cursor t)
-    
-    
-                                            ;  (defun vinid/update-displays ()
-                                            ;    (vinid/run-in-background "autorandr --change --force")
-                                            ;    (message "Display config: %s"
-                                            ;             (string-trim (shell-command-to-string "autorandr --current"))))
-    
-                                            ;  (add-hook 'exwm-randr-screen-change-hook #'vinid/update-displays)
-                                            ;  (vinid/update-displays)
-    
-    
-    
+
+  (require 'exwm-randr)
+
+  (exwm-randr-enable)
+  
+  (setq exwm-randr-workspace-monitor-plist '(2 "DP-2"))
+
+  (setq exwm-workspace-warp-cursor t)
+
+
+  (defun vinid/update-displays ()
+    (vinid/run-in-background "autorandr --change --force")
+                                          ;    (message "Display config: %s"
+    (string-trim (shell-command-to-string "autorandr --current"))))
+
+  (add-hook 'exwm-randr-screen-change-hook #'vinid/update-displays)
+  (vinid/update-displays)
+
+
+
 #+end_src
 
 
@@ -989,6 +974,7 @@ Cleaning unused buffers
 
 ** 1passel
 
+
 1passel is a very simple utility I have built to manage 1password integration withing EXWM
 
 #+begin_src emacs-lisp
@@ -1000,143 +986,176 @@ Cleaning unused buffers
     
 #+end_src
 
+** GPT custom
 
-** QuteBrowser
+#+begin_src emacs-lisp
 
-#+begin_src shell :tangle /home/vinid/.config/qutebrowser/qutemacs.py :mkdirp yes
-  
-          # qutemacs - a simple, preconfigured Emacs binding set for qutebrowser
-  #
-  # The aim of this binding set is not to provide bindings for absolutely
-  # everything, but to provide a stable launching point for people to make their
-  # own bindings.
-  #
-  # Installation:
-  #
-  # 1. Copy this file or add this repo as a submodule to your dotfiles.
-  # 2. Add this line to your config.py, and point the path to this file:
-  # config.source('qutemacs/qutemacs.py')
+  (defun gpt-improve()
+    (interactive)
+      (kill-new (shell-command-to-string
+               (concat "python3 /home/vinid/nope/gptask.py --string '" (current-kill 0) "'"))))
 
+    (global-set-key (kbd "C-c g") 'gpt-improve)
 
-  config = config  # type: ConfigAPI # noqa: F821 pylint: disable=E0602,C0103
-  c = c  # type: ConfigContainer # noqa: F821 pylint: disable=E0602,C0103
-
-  # disable insert mode completely
-  c.input.insert_mode.auto_enter = False
-  c.input.insert_mode.auto_leave = False
-  c.input.insert_mode.plugins = False
-
-  # Forward unbound keys
-  c.input.forward_unbound_keys = "all"
-
-  ESC_BIND = 'clear-keychain ;; search ;; fullscreen --leave'
-
-
-  c.bindings.default['normal'] = {}
-  c.bindings.default['insert'] = {}
-  # Bindings
-  c.bindings.commands['normal'] = {
-          # Navigation
-          '<ctrl-v>': 'scroll-page 0 0.5',
-          '<alt-v>': 'scroll-page 0 -0.5',
-          '<ctrl-shift-v>': 'scroll-page 0 1',
-          '<alt-shift-v>': 'scroll-page 0 -1',
-          # FIXME come up with logical bindings for scrolling left/right
-
-          # Commands
-          '<ctrl-ù>': 'set-cmd-text :',
-  #	'<ctrl-x>b': 'set-cmd-text -s :buffer',
-          '<ctrl-t>k': 'tab-close',
-  #	'<ctrl-x><ctrl-c>': 'quit',
-
-    
-
-          # searching
-          '<ctrl-s>': 'set-cmd-text /',
-          '<ctrl-r>': 'set-cmd-text ?',
-	
-          # hinting
-          '<alt-s>': 'hint all',
-
-          # history
-          '<ctrl-k>': 'forward',
-          '<ctrl-j>': 'back',
-
-          # tabs
-          '<ctrl-tab>': 'tab-next',
-          '<ctrl-shift-tab>': 'tab-prev',
-
-          # open links
-          '<ctrl-l>': 'set-cmd-text -s :open',
-          '<alt-l>': 'set-cmd-text -s :open -t',
-
-          # editing
-          '<ctrl-f>': 'fake-key <Right>',
-          '<ctrl-b>': 'fake-key <Left>',
-          '<ctrl-a>': 'fake-key <Home>',
-          '<ctrl-e>': 'fake-key <End>',
-          '<ctrl-n>': 'fake-key <Down>',
-          '<ctrl-p>': 'fake-key <Up>',
-          '<alt-f>': 'fake-key <Ctrl-Right>',
-          '<alt-b>': 'fake-key <Ctrl-Left>',
-          '<ctrl-d>': 'fake-key <Delete>',
-          '<alt-d>': 'fake-key <Ctrl-Delete>',
-          '<alt-backspace>': 'fake-key <Ctrl-Backspace>',
-	
-
-          # Numbers
-          # https://github.com/qutebrowser/qutebrowser/issues/4213
-          '1': 'fake-key 1',
-          '2': 'fake-key 2',
-          '3': 'fake-key 3',
-          '4': 'fake-key 4',
-          '5': 'fake-key 5',
-          '6': 'fake-key 6',
-          '7': 'fake-key 7',
-          '8': 'fake-key 8',
-          '9': 'fake-key 9',
-          '0': 'fake-key 0',
-
-          # escape hatch
-          '<ctrl-h>': 'set-cmd-text -s :help',
-          '<ctrl-g>': ESC_BIND,
-
-          '<ctrl-a>' : 'fake-key <Ctrl-a>',
-          '<ctrl-v>': 'insert-text {clipboard}',
-          '<ctrl-w>': 'fake-key <Ctrl-c>;;message-info "cut to clipboard"',
-          '<alt-w>': 'fake-key <Ctrl-c>;;message-info "copy to clipboard"',
-  }
-
-  c.bindings.commands['command'] = {
-          '<ctrl-s>': 'search-next',
-          '<ctrl-r>': 'search-prev',
-
-          '<ctrl-p>': 'completion-item-focus prev',
-          '<ctrl-n>': 'completion-item-focus next',
-
-          '<alt-p>': 'command-history-prev',
-          '<alt-n>': 'command-history-next',
-
-          # escape hatch
-          '<ctrl-g>': 'mode-leave',
-  }
-
-  c.bindings.commands['hint'] = {
-          # escape hatch
-          '<ctrl-g>': 'mode-leave',
-  }
-
-
-  c.bindings.commands['caret'] = {
-          # escape hatch
-          '<ctrl-g>': 'mode-leave',
-  }
-  
-  
 #+end_src
 
 
+** QuteBrowser
 
+
+
+#+begin_src shell :tangle /home/vinid/.config/qutebrowser/qutemacs.py :mkdirp yes
+
+   # qutemacs - a simple, preconfigured Emacs binding set for # qutebrowser
+   #
+   # The aim of this binding set is not to provide bindings for absolutely
+   # everything, but to provide a stable launching point for people to make their
+   # own bindings.
+   #
+   # Installation:
+   #
+   # 1. Copy this file or add this repo as a submodule to your dotfiles.
+   # 2. Add this line to your config.py, and point the path to this file:
+   # config.source('qutemacs/qutemacs.py')
+
+
+   config = config  # type: ConfigAPI # noqa: F821 pylint:
+   # disable=E0602,C0103
+   c = c  # type: ConfigContainer # noqa: F821 pylint: disable=E0602,C0103
+
+   # disable insert mode completely
+   c.input.insert_mode.auto_enter = False
+   c.input.insert_mode.auto_leave = False
+   c.input.insert_mode.plugins = False
+
+   # Forward unbound keys
+   c.input.forward_unbound_keys = "all"
+
+   ESC_BIND = 'clear-keychain ;; search ;; fullscreen --leave'
+
+
+   c.bindings.default['normal'] = {}
+   c.bindings.default['insert'] = {}
+   # Bindings
+   c.bindings.commands['normal'] = {
+           # Navigation
+           '<ctrl-v>': 'scroll-page 0 0.5',
+           '<alt-v>': 'scroll-page 0 -0.5',
+           '<ctrl-shift-v>': 'scroll-page 0 1',
+           '<alt-shift-v>': 'scroll-page 0 -1',
+           # FIXME come up with logical bindings for scrolling left/right
+
+           # Commands
+           '<ctrl-ù>': 'set-cmd-text :',
+   #	'<ctrl-x>b': 'set-cmd-text -s :buffer',
+           '<ctrl-t>k': 'tab-close',
+   #	'<ctrl-x><ctrl-c>': 'quit',
+
+
+
+           # searching
+           '<ctrl-s>': 'set-cmd-text /',
+           '<ctrl-r>': 'set-cmd-text ?',
+
+           # hinting
+           '<alt-s>': 'hint all',
+
+           # history
+           '<ctrl-k>': 'forward',
+           '<ctrl-j>': 'back',
+
+           # tabs
+           '<ctrl-tab>': 'tab-next',
+           '<ctrl-shift-tab>': 'tab-prev',
+
+           # open links
+           '<ctrl-l>': 'set-cmd-text -s :open',
+           '<alt-l>': 'set-cmd-text -s :open -t',
+
+           # editing
+           '<ctrl-f>': 'fake-key <Right>',
+           '<ctrl-b>': 'fake-key <Left>',
+           '<ctrl-a>': 'fake-key <Home>',
+           '<ctrl-e>': 'fake-key <End>',
+           '<ctrl-n>': 'fake-key <Down>',
+           '<ctrl-p>': 'fake-key <Up>',
+           '<alt-f>': 'fake-key <Ctrl-Right>',
+           '<alt-b>': 'fake-key <Ctrl-Left>',
+           '<ctrl-d>': 'fake-key <Delete>',
+           '<alt-d>': 'fake-key <Ctrl-Delete>',
+           '<alt-backspace>': 'fake-key <Ctrl-Backspace>',
+
+
+           # Numbers
+           # https://github.com/qutebrowser/qutebrowser/issues/4213
+           '1': 'fake-key 1',
+           '2': 'fake-key 2',
+           '3': 'fake-key 3',
+           '4': 'fake-key 4',
+           '5': 'fake-key 5',
+           '6': 'fake-key 6',
+           '7': 'fake-key 7',
+           '8': 'fake-key 8',
+           '9': 'fake-key 9',
+           '0': 'fake-key 0',
+
+           # escape hatch
+           '<ctrl-h>': 'set-cmd-text -s :help',
+           '<ctrl-g>': ESC_BIND,
+
+           '<ctrl-a>' : 'fake-key <Ctrl-a>',
+           '<ctrl-v>': 'insert-text {clipboard}',
+           '<ctrl-w>': 'fake-key <Ctrl-c>;;message-info "cut to clipboard"',
+           '<alt-w>': 'fake-key <Ctrl-c>;;message-info "copy to clipboard"',
+   }
+
+   c.bindings.commands['command'] = {
+           '<ctrl-s>': 'search-next',
+           '<ctrl-r>': 'search-prev',
+
+           '<ctrl-p>': 'completion-item-focus prev',
+           '<ctrl-n>': 'completion-item-focus next',
+
+           '<alt-p>': 'command-history-prev',
+           '<alt-n>': 'command-history-next',
+
+           # escape hatch
+           '<ctrl-g>': 'mode-leave',
+   }
+
+   c.bindings.commands['hint'] = {
+           # escape hatch
+           '<ctrl-g>': 'mode-leave',
+   }
+
+
+   c.bindings.commands['caret'] = {
+           # escape hatch
+           '<ctrl-g>': 'mode-leave',
+   }
+
+
+#+end_src
+
+
+** NanoEmacs
+
+#+begin_src emacs-lisp
+                                          ;  (straight-use-package   '(nano :type git :host github :repo "rougier/nano-emacs"))
+
+  (straight-use-package '(nano-theme :type git :host github   :repo "rougier/nano-theme"))
+
+  (load-theme 'nano t)
+  (nano-dark)
+                                          ;  (nano-theme-set-dark)
+                                          ; (nano-faces)
+                                          ;(nano-theme)
+
+  (load-theme 'nano t)
+  (menu-bar-mode -1)
+  (tool-bar-mode -1) 
+
+#+end_src
 
 * Reference
 
