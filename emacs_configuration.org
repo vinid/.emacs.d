@@ -44,7 +44,67 @@ sense to install this packages when there's a new fresh install.
 To see the icons one as also to run ;; M-x all-the-icons-install-fonts
 
 
+
+
 ** Setup
+
+*** Tmux
+
+This entire configuration comes form https://hamvocke.com/blog/a-guide-to-customizing-your-tmux-conf/
+
+#+begin_src shell :tangle ~/.tmux.conf
+
+unbind C-b
+set-option -g prefix C-f
+bind-key C-f send-prefix
+
+bind i split-window -h
+bind o split-window -v
+unbind '"'
+unbind %
+
+# DESIGN TWEAKS: https://hamvocke.com/blog/a-guide-to-customizing-your-tmux-conf/
+
+# don't do anything when a 'bell' rings
+set -g visual-activity off
+set -g visual-bell off
+set -g visual-silence off
+setw -g monitor-activity off
+set -g bell-action none
+
+# clock mode
+setw -g clock-mode-colour colour1
+
+# copy mode
+setw -g mode-style 'fg=colour1 bg=colour18 bold'
+
+# pane borders
+set -g pane-border-style 'fg=colour1'
+set -g pane-active-border-style 'fg=colour3'
+
+# statusbar
+set -g status-position bottom
+set -g status-justify left
+set -g status-style 'fg=colour1'
+set -g status-left ''
+set -g status-right '%Y-%m-%d %H:%M '
+set -g status-right-length 50
+set -g status-left-length 10
+
+setw -g window-status-current-style 'fg=colour0 bg=colour1 bold'
+setw -g window-status-current-format ' #I #W #F '
+
+setw -g window-status-style 'fg=colour1 dim'
+setw -g window-status-format ' #I #[fg=colour7]#W #[fg=colour1]#F '
+
+setw -g window-status-bell-style 'fg=colour2 bg=colour1 bold'
+
+# messages
+set -g message-style 'fg=colour2 bg=colour0 bold'
+
+#+end_src
+
+*** Main Emacs
 
 This symbolic link is used to connect the local desktop configuration with the one under the /xsession/ folder.
 
@@ -236,7 +296,6 @@ This part of the configuration includes basic stuff needed to have a working ema
 (setq auto-save-file-name-transforms
       `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
 #+end_src
-
 
 
 ** Dired
@@ -441,11 +500,16 @@ Custom Org Agenda view from https://github.com/james-stoup/emacs-org-mode-tutori
            ((org-agenda-compact-blocks nil)))
           ))   
 
+(setq org-agenda-prefix-format '((agenda . " %i %-12:c%?-12t%-6e% s")
+                                (todo . " %i %-12:c %-6e")
+                                (tags . " %i %-12:c")
+                                (search . " %i %-12:c")))
+  
 #+end_src
 
 **** Org Babel
 
-To execute or export code in =org-mode= code blocks, you'll need to set up =org-babel-load-languages= for each language you'd like to use. 
+to execute or expot code in =org-mode= code blocks, you'll need to set up =org-babel-load-languages= for each language you'd like to use. 
 
 #+begin_src emacs-lisp
 
@@ -498,6 +562,175 @@ This snippet adds a hook to =org-mode= buffers so that =vinid/org-babel-tangle-c
   (org-roam-db-autosync-mode)
   ;; If using org-roam-protocol
   (require 'org-roam-protocol))
+  
+#+end_src
+
+
+
+** Magit
+
+#+begin_src emacs-lisp
+  
+(use-package magit)
+  
+#+end_src
+
+
+* Desktop Environment
+
+** EXWM Basic Setup
+
+All the configuration params currently used in EXWM.
+
+#+begin_src emacs-lisp
+  (server-start)
+
+  (setq mouse-autoselect-window t
+        focus-follows-mouse t)
+
+  (defun vinid/exwm-init-hook ()
+    ;; Make workspace 1 be the one where we land at startup
+    (exwm-workspace-switch-create 1))
+
+  (defun vinid/exwm-update-class ()
+    (exwm-workspace-rename-buffer exwm-class-name))
+  ;; defines a function that makes a nicer visualization for the firefox tab
+  (defun vinid/exwm-update-title ()
+    (pcase exwm-class-name
+      ("Firefox" (exwm-workspace-rename-buffer (format "Firefox: %s" exwm-title)))))
+
+  (defun vinid/set-wallpaper ()
+    (interactive)
+    ;; NOTE: You will need to update this to a valid background path!
+    (start-process-shell-command
+     "feh" nil  "feh --bg-scale /home/vinid/Pictures/wall.jpg"))
+
+  (use-package exwm
+    :config
+    ;; Set the default number of workspaces
+    (setq exwm-workspace-number 5)
+
+    ;; When window "class" updates, use it to set the buffer name
+    (add-hook 'exwm-update-class-hook #'vinid/exwm-update-class)
+
+    ;; When EXWM starts up, do some extra configuration
+    (add-hook 'exwm-init-hook #'vinid/exwm-init-hook)
+
+    (setq mouse-autoselect-window nil
+          focus-follows-mouse nil)
+
+    ;; When window title updates, use it to set the buffer name
+
+    (add-hook 'exwm-update-title-hook #'vinid/exwm-update-title)
+    ;; To add a key binding only available in line-mode, simply define it in
+    ;; `exwm-mode-map'.  The following example shortens 'C-c q' to 'C-q'.
+    (define-key exwm-mode-map [?\C-q] #'exwm-input-send-next-key)
+
+    ;; adding a way to run apps
+    (exwm-input-set-key (kbd "\C-c SPC") 'counsel-linux-app) 
+
+    ;; (counsel-linux-app)
+    ;; toggle fullscreen
+    (exwm-input-set-key (kbd "s-f") 'exwm-layout-toggle-fullscreen)
+
+    ;; Set the wallpaper after changing the resolution
+    (vinid/set-wallpaper)
+
+    ;; These keys should always pass through to Emacs
+    (setq exwm-input-prefix-keys
+          '(?\C-x
+            ?\C-u
+            ?\C-h
+            ?\M-x
+            ?\M-`
+            ?\M-&
+            ?\M-:
+            ?\C-\M-j  ;; Buffer list
+            ?\C-\ ))  ;; Ctrl+Space
+
+
+    ;; Ctrl+Q will enable the next key to be sent directly
+    (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
+
+    ;; The following example demonstrates how to use simulation keys to mimic
+    ;; the behavior of Emacs.  The value of `exwm-input-simulation-keys` is a
+    ;; list of cons cells (SRC . DEST), where SRC is the key sequence you press
+    ;; and DEST is what EXWM actually sends to application.  Note that both SRC
+    ;; and DEST should be key sequences (vector or string).
+    (setq exwm-input-simulation-keys
+          '(
+            ;; movement
+            ([?\C-b] . [left])
+            ([?\M-b] . [C-left])
+            ([?\C-f] . [right])
+            ([?\M-f] . [C-right])
+            ([?\C-p] . [up])
+            ([?\C-n] . [down])
+            ([?\C-a] . [home])
+            ([?\C-e] . [end])
+            ([?\M-v] . [prior])
+            ([?\C-h] . [left delete])
+            ([?\C-v] . [next])
+            ([?\C-d] . [delete])
+            ([?\M-d] . [C-S-right delete])
+            ([?\C-k] . [S-end delete])
+            ;; cut paste
+            ([?\C-w] . [?\C-x])
+            ([?\M-w] . [?\C-c])
+            ([?\C-y] . [?\C-v])
+            ;; search
+            ([?\C-s] . [?\C-f])))
+
+
+    ;; raise the specified app if it's already started, otherwise start it
+    ;; this should ideally raise buffer the previous buffer, not the current one
+    ;; meaning: if I had chrome on the right side and I call this from the left side
+    ;;          it should show up on the right side
+
+    (defun vinid/run-or-raise (buffer-prefix &optional cmd)
+      (let ((existing-buffer
+             (cl-dolist (buffer (buffer-list))
+               (if (string-prefix-p buffer-prefix (buffer-name buffer))
+                   (cl-return buffer)))))
+        (if existing-buffer
+            ;; it's currently displayed, go to it
+            (if (get-buffer-window existing-buffer)
+                (message (format "%s" (pop-to-buffer existing-buffer)))
+              (exwm-workspace-switch-to-buffer existing-buffer))
+          (start-process-shell-command buffer-prefix nil cmd))))
+
+
+    ;; Set up global key bindings.  These always work, no matter the input state!
+    ;; Keep in mind that changing this list after EXWM initializes has no effect.
+    (setq exwm-input-global-keys
+          `(
+            ;; Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
+            ([?\s-r] . exwm-reset)
+
+            ;; Move between windows
+            ([s-left] . windmove-left)
+            ([s-right] . windmove-right)
+            ([s-up] . windmove-up)
+            ([s-down] . windmove-down)
+
+            ;; Launch applications via shell command
+            ([?\s-&] . (lambda (command)
+                         (interactive (list (read-shell-command "$ ")))
+                         (start-process-shell-command command nil command)))
+
+            ;; Switch workspace
+            ([?\s-w] . exwm-workspace-switch)
+            ([?\s-`] . (lambda () (interactive) (exwm-workspace-switch-create 0)))
+
+            ;; 's-N': Switch to certain workspace with Super (Win) plus a number key (0 - 9)
+            ,@(mapcar (lambda (i)
+                        `(,(kbd (format "s-%d" i)) .
+                          (lambda ()
+                            (interactive)
+                            (exwm-workspace-switch-create ,i))))
+                      (number-sequence 0 9))))
+
+    (exwm-enable))
   
 #+end_src
 
@@ -560,7 +793,7 @@ Polybar serves as the main bar on the top of the screen
   font-2 = "Material Icons:size=16;5"
   font-3 = "Fira Mono:size=11;-3"
 
-  modules-left = exwm-workspace logo
+  modules-left = exwm-workspace vpn
   modules-right = cpu memory temperature battery date
 
   tray-position = right
@@ -591,10 +824,6 @@ Polybar serves as the main bar on the top of the screen
   ramp-coreload-4 = ▅
   ramp-coreload-5 = ▆
   ramp-coreload-6 = ▇
-
-  [module/logo]
-  type = custom/text
-  content = T
 
   [module/date]
   type = internal/date
@@ -658,6 +887,14 @@ Polybar serves as the main bar on the top of the screen
   label-warn = %temperature-c%!
   label-warn-foreground = ${colors.secondary}
 
+  [module/vpn]
+  type = custom/script
+  exec = echo "VPN: " $(nordvpn status | sed -n 's/Status: \([[:alpha:]]\).*/\1/p' | tr -d '[:punct:]')
+  interval = 10
+  format-underline = #268bd2
+  #  format-prefix = "🖧 "
+  format-prefix-foreground = #5b
+  
 #+end_src
 
 Very simple polybar to have on top of the EXWM desktop environment
@@ -701,184 +938,14 @@ Very simple polybar to have on top of the EXWM desktop environment
     
 #+end_src
 
-** Magit
-
-#+begin_src emacs-lisp
-  
-(use-package magit)
-  
-#+end_src
 
 
-* EXWM
-
-
-** Basic Setup
-All the configuration params currently used in EXWM.
-
-
-#+begin_src emacs-lisp
-  (server-start)
-
-  (setq mouse-autoselect-window t
-        focus-follows-mouse t)
-
-    (defun vinid/exwm-init-hook ()
-      ;; Make workspace 1 be the one where we land at startup
-      (exwm-workspace-switch-create 1))
-
-    (defun vinid/exwm-update-class ()
-      (exwm-workspace-rename-buffer exwm-class-name))
-    ;; defines a function that makes a nicer visualization for the firefox tab
-    (defun vinid/exwm-update-title ()
-      (pcase exwm-class-name
-        ("Firefox" (exwm-workspace-rename-buffer (format "Firefox: %s" exwm-title)))))
-
-    (defun vinid/set-wallpaper ()
-      (interactive)
-      ;; NOTE: You will need to update this to a valid background path!
-      (start-process-shell-command
-       "feh" nil  "feh --bg-scale /home/vinid/Pictures/wall.jpg"))
-
-    (use-package exwm
-      :config
-      ;; Set the default number of workspaces
-      (setq exwm-workspace-number 5)
-
-      ;; When window "class" updates, use it to set the buffer name
-      (add-hook 'exwm-update-class-hook #'vinid/exwm-update-class)
-
-      ;; When EXWM starts up, do some extra configuration
-      (add-hook 'exwm-init-hook #'vinid/exwm-init-hook)
-
-      (setq mouse-autoselect-window nil
-            focus-follows-mouse nil)
-
-      ;; When window title updates, use it to set the buffer name
-
-      (add-hook 'exwm-update-title-hook #'vinid/exwm-update-title)
-      ;; To add a key binding only available in line-mode, simply define it in
-      ;; `exwm-mode-map'.  The following example shortens 'C-c q' to 'C-q'.
-      (define-key exwm-mode-map [?\C-q] #'exwm-input-send-next-key)
-
-      ;; adding a way to run apps
-      (exwm-input-set-key (kbd "\C-c SPC") 'counsel-linux-app) 
-
-      ;; (counsel-linux-app)
-      ;; toggle fullscreen
-      (exwm-input-set-key (kbd "s-f") 'exwm-layout-toggle-fullscreen)
-
-      ;; Set the wallpaper after changing the resolution
-      (vinid/set-wallpaper)
-
-      ;; These keys should always pass through to Emacs
-      (setq exwm-input-prefix-keys
-            '(?\C-x
-              ?\C-u
-              ?\C-h
-              ?\M-x
-              ?\M-`
-              ?\M-&
-              ?\M-:
-              ?\C-\M-j  ;; Buffer list
-              ?\C-\ ))  ;; Ctrl+Space
-
-      
-      ;; Ctrl+Q will enable the next key to be sent directly
-      (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
-
-      ;; The following example demonstrates how to use simulation keys to mimic
-      ;; the behavior of Emacs.  The value of `exwm-input-simulation-keys` is a
-      ;; list of cons cells (SRC . DEST), where SRC is the key sequence you press
-      ;; and DEST is what EXWM actually sends to application.  Note that both SRC
-      ;; and DEST should be key sequences (vector or string).
-      (setq exwm-input-simulation-keys
-            '(
-              ;; movement
-              ([?\C-b] . [left])
-              ([?\M-b] . [C-left])
-              ([?\C-f] . [right])
-              ([?\M-f] . [C-right])
-              ([?\C-p] . [up])
-              ([?\C-n] . [down])
-              ([?\C-a] . [home])
-              ([?\C-e] . [end])
-              ([?\M-v] . [prior])
-              ([?\C-h] . [left delete])
-              ([?\C-v] . [next])
-              ([?\C-d] . [delete])
-              ([?\M-d] . [C-S-right delete])
-              ([?\C-k] . [S-end delete])
-              ;; cut paste
-              ([?\C-w] . [?\C-x])
-              ([?\M-w] . [?\C-c])
-              ([?\C-y] . [?\C-v])
-              ;; search
-              ([?\C-s] . [?\C-f])))
-
-
-  ;; raise the specified app if it's already started, otherwise start it
-  ;; this should ideally raise buffer the previous buffer, not the current one
-  ;; meaning: if I had chrome on the right side and I call this from the left side
-  ;;          it should show up on the right side
-
-  (defun vinid/run-or-raise (buffer-prefix &optional cmd)
-        (let ((existing-buffer
-                   (cl-dolist (buffer (buffer-list))
-                         (if (string-prefix-p buffer-prefix (buffer-name buffer))
-                                 (cl-return buffer)))))
-          (if existing-buffer
-                  ;; it's currently displayed, go to it
-                  (if (get-buffer-window existing-buffer)
-                                (message (format "%s" (pop-to-buffer existing-buffer)))
-                        (exwm-workspace-switch-to-buffer existing-buffer))
-                (start-process-shell-command buffer-prefix nil cmd))))
-
-
-    (defun goto-wm-logseq ()
-        "raise 'logseq'"		
-        (interactive)
-        (vinid/run-or-raise "Logseq" "flatpak run com.logseq.Logseq"))
-
-
-      ;; Set up global key bindings.  These always work, no matter the input state!
-      ;; Keep in mind that changing this list after EXWM initializes has no effect.
-      (setq exwm-input-global-keys
-            `(
-              ;; Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
-              ([?\s-r] . exwm-reset)
-
-              ;; Move between windows
-              ([s-left] . windmove-left)
-              ([s-right] . windmove-right)
-              ([s-up] . windmove-up)
-              ([s-down] . windmove-down)
-
-              ;; Launch applications via shell command
-              ([?\s-&] . (lambda (command)
-                           (interactive (list (read-shell-command "$ ")))
-                           (start-process-shell-command command nil command)))
-
-              ;; Switch workspace
-              ([?\s-w] . exwm-workspace-switch)
-              ([?\s-`] . (lambda () (interactive) (exwm-workspace-switch-create 0)))
-
-              ;; 's-N': Switch to certain workspace with Super (Win) plus a number key (0 - 9)
-              ,@(mapcar (lambda (i)
-                          `(,(kbd (format "s-%d" i)) .
-                            (lambda ()
-                              (interactive)
-                              (exwm-workspace-switch-create ,i))))
-                        (number-sequence 0 9))))
-
-      (exwm-enable))
-
-#+end_src
 
 ** Configuration for the multiple screens
 
-#+begin_src emacs-lisp
+(skipping this for now)
 
+#
   (require 'exwm-randr)
 
   (exwm-randr-enable)
@@ -891,7 +958,7 @@ All the configuration params currently used in EXWM.
   (defun vinid/update-displays ()
     (vinid/run-in-background "autorandr --change --force")
                                           ;    (message "Display config: %s"
-    (string-trim (shell-command-to-string "autorandr --current"))))
+    (string-trim (shell-command-to-string "autorandr --current")))
 
   (add-hook 'exwm-randr-screen-change-hook #'vinid/update-displays)
   (vinid/update-displays)
@@ -904,7 +971,6 @@ All the configuration params currently used in EXWM.
 * Apps
 
 ** Run in background function
-
 
 This function allows to run a process in the background
 
@@ -923,8 +989,6 @@ This function allows to run a process in the background
 (vinid/run-in-background "dropbox start")
 
 #+end_src
-
-
 
 ** Quick access to some of the files
 
@@ -1147,7 +1211,8 @@ Cleaning unused buffers
 
   (load-theme 'nano t)
   (nano-dark)
-                                          ;  (nano-theme-set-dark)
+
+
                                           ; (nano-faces)
                                           ;(nano-theme)
 
