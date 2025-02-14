@@ -1,0 +1,967 @@
+#+title: Emacs Configuration
+#+PROPERTY: header-args:emacs-lisp :tangle ./init.el :mkdirp yes
+
+
+* Initial Setting
+
+This is a list of things that might not work out of the bxo and that might require some manual work. It is probably possible to make this something that runs after fresh install.
+
+The following is important to fix viz stuff (e.g., xft.dpi fix font for gtk apps; usually i have problems when attaching a monitor)
+
+#+begin_src
+
+vinid@jester:~/opt/pycharm$ cat ../../.xinitrc
+export _JAVA_AWT_WM_NONREPARENTING=1
+
+vinid@jester:~/opt/pycharm$ cat ../../.Xresources 
+Xft.dpi: 125
+Xcursor*theme: whiteglass
+Xcursor*size: 32
+
+#+end_src
+
+** Packages to Install Before
+
+There is a buch of additional packages I need to install before being able to run exwm (e.g., emacs). Makes
+sense to install this packages when there's a new fresh install.
+
+- compton
+- slock
+- xss-lock
+- dunst for notifications
+- fonts-firacode
+- fonts-cantarell
+- arandr
+
+Hopefully the following command install most things
+
+#+begin_src
+    sudo apt install emacs git fonts-firacode fonts-cantarell compton slock xss-lock arandr dunst
+#+end_src
+
+
++ note that dropbox requires also to install the mini module to run commands (dropbox-nautilus?)
+  
+To see the icons one as also to run ;; M-x all-the-icons-install-fonts
+
+** Setup
+
+
+** Backend processes
+
+#+begin_src  shell :tangle (if (eq system-type 'gnu/linux) "./exwm/start-exwm.sh" "no") :shebang #!/bin/sh :mkdirp yes
+
+  # Run the screen compositor
+  compton &
+
+  # Enable screen locking on suspend
+  xss-lock -- slock &
+
+  # Fire it up
+  exec dbus-launch --exit-with-session emacs -mm --debug-init  
+
+#+end_src
+
+
+* Actual Start of Emacs Configuration
+
+#+BEGIN_SRC emacs-lisp
+
+    (tool-bar-mode -1)
+    (scroll-bar-mode -1)
+    (menu-bar-mode -1)
+    (setq inhibit-startup-screen t)
+    (setq visible-bell nil)
+    (setq ring-bell-function 'ignore)
+
+    (defvar bootstrap-version)
+    (let ((bootstrap-file
+           (expand-file-name
+            "straight/repos/straight.el/bootstrap.el"
+            (or (bound-and-true-p straight-base-dir)
+                user-emacs-directory)))
+          (bootstrap-version 7))
+      (unless (file-exists-p bootstrap-file)
+        (with-current-buffer
+            (url-retrieve-synchronously
+             "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+             'silent 'inhibit-cookies)
+          (goto-char (point-max))
+          (eval-print-last-sexp)))
+      (load bootstrap-file nil 'nomessage))
+    (straight-use-package 'use-package)
+    (setq straight-use-package-by-default t)
+
+    (setq package-enable-at-startup nil)
+
+
+(use-package lambda-themes
+  :straight (:type git :host github :repo "lambda-emacs/lambda-themes") 
+  :custom
+  (lambda-themes-set-italic-comments t)
+  (lambda-themes-set-italic-keywords t)
+  (lambda-themes-set-variable-pitch t) 
+  :config
+  ;; load preferred theme 
+  (load-theme 'lambda-dark))
+
+  
+    (when (eq system-type 'darwin)	; two things to fix problems on macos
+      (global-set-key (kbd "s-w") 'kill-ring-save))
+
+
+    (when (eq system-type 'darwin)
+      (setq insert-directory-program "/opt/homebrew/bin/gls"))
+
+#+END_SRC
+
+
+#+begin_src   emacs-lisp :tangle (if (eq system-type 'gnu/linux) "./exwm/start-exwm.sh" "no") 
+
+  (start-process-shell-command "xmodmap" nil "xmodmap ~/.emacs.d/exwm/Xmodmap")
+  
+#+end_src 
+
+** Desktop Setup
+
+
+A thing to keep in mind is that I had to set manually the dpi for xorg
+
+#+begin_src  emacs-lisp 
+
+     (defvar vinid/default-font-size 140)
+     (defvar vinid/default-variable-font-size 140)
+
+     (set-face-attribute 'default nil :font "Fira Code Retina" :height vinid/default-font-size)
+
+     ;; Set the fixed pitch face
+     (set-face-attribute 'fixed-pitch nil :font "Fira Code Retina" :height vinid/default-font-size)
+
+     ;; Set the variable pitch face
+     (set-face-attribute 'variable-pitch nil :font "Cantarell" :height vinid/default-variable-font-size :weight 'regular)
+
+     (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
+     (add-to-list 'default-frame-alist '(fullscreen . maximized))
+  
+#+end_src 
+
+
+#+begin_src emacs-lisp
+
+
+     (use-package all-the-icons)
+
+     (ido-mode 1)
+
+     (global-display-line-numbers-mode t)
+
+     ;; Disable line numbers for some modes
+     (dolist (mode '(org-mode-hook
+		     term-mode-hook
+		     shell-mode-hook
+		     treemacs-mode-hook
+		     eshell-mode-hook))
+       (add-hook mode (lambda () (display-line-numbers-mode 0))))
+
+#+end_src
+
+
+* Other Emacs Packages (Ivy, Counsel...)
+
+This part of the configuration includes basic stuff needed to have a working emacs environment
+
+** Ivy and Counse
+
+#+begin_src emacs-lisp
+
+  (use-package ivy
+      :diminish
+      :bind (("C-s" . swiper)
+             :map ivy-minibuffer-map
+             ("TAB" . ivy-alt-done)
+             ("C-l" . ivy-alt-done)
+             ("C-j" . ivy-next-line)
+             ("C-k" . ivy-previous-line)
+             :map ivy-switch-buffer-map
+             ("C-k" . ivy-previous-line)
+             ("C-l" . ivy-done)
+             ("C-d" . ivy-switch-buffer-kill)
+             :map ivy-reverse-i-search-map
+             ("C-k" . ivy-previous-line)
+             ("C-d" . ivy-reverse-i-search-kill))
+      :config
+      (ivy-mode 1))
+
+    (use-package ivy-rich
+      :after ivy
+      :init
+      (ivy-rich-mode 1))
+
+  ; note that we rempaped this for macos
+  (use-package counsel
+      :bind (("C-s-j" . 'counsel-switch-buffer)
+             :map minibuffer-local-map
+             ("C-r" . 'counsel-minibuffer-history))
+      :custom
+      (counsel-linux-app-format-function #'counsel-linux-app-format-function-name-only)
+      :config
+
+  (counsel-mode 1))
+
+#+end_src
+
+#+begin_src emacs-lisp 
+
+  (use-package rainbow-delimiters
+    :hook (prog-mode . rainbow-delimiters-mode))
+
+  (use-package which-key
+    :init (which-key-mode)
+    :diminish which-key-mode
+    :config
+    (setq which-key-idle-delay 1))
+
+#+end_src
+
+
+#+begin_src emacs-lisp
+
+;; NOTE: If you want to move everything out of the ~/.emacs.d folder
+;; reliably, set `user-emacs-directory` before loading no-littering!
+;(setq user-emacs-directory "~/.cache/emacs")
+
+(use-package no-littering)
+
+;; no-littering doesn't set this by default so we must place
+;; auto save files in the same path as it uses for sessions
+(setq auto-save-file-name-transforms
+      `((".*" ,(no-littering-expand-var-file-name "auto-save/") t)))
+#+end_src
+
+
+** Dired
+
+#+begin_src emacs-lisp
+
+  (use-package dired
+    :straight nil
+    :commands (dired dired-jump)
+    :bind (("C-x C-d" . dired-jump))
+    :custom ((dired-listing-switches "-agho --group-directories-first")))
+
+  (use-package dired-single)
+
+                                          ; to avoid creating infinite buffers with dired. I am not sure if this is working or not
+
+  (defun my-dired-init ()
+    "Bunch of stuff to run for dired, either immediately or when it's
+         loaded."
+    ;; <add other stuff here>
+    (define-key dired-mode-map [remap dired-find-file]
+      'dired-single-buffer)
+    (define-key dired-mode-map [remap dired-mouse-find-file-other-window]
+      'dired-single-buffer-mouse)
+    (define-key dired-mode-map [remap dired-up-directory]
+      'dired-single-up-directory))
+
+  ;; if dired's already loaded, then the keymap will be bound
+  (if (boundp 'dired-mode-map)
+      ;; we're good to go; just add our bindings
+      (my-dired-init)
+    ;; it's not loaded yet, so add our bindings to the load-hook
+    (add-hook 'dired-load-hook 'my-dired-init))
+
+  (use-package all-the-icons-dired
+    :hook (dired-mode . all-the-icons-dired-mode))
+
+                                          ;  (use-package dired-hide-dotfiles
+                                          ;   :hook (dired-mode . dired-hide-dotfiles-mode)
+                                          ;  :config
+                                          ; (bind-key   "H" 'dired-hide-dotfiles-mode))
+
+#+end_src
+
+** GPG setup
+
+Not sure why, but without this GPG takes a long time to call the prompt for the passwords (seems to be a known bug).
+
+Second option is for the gpg cache timeout
+
+#+begin_src shell :tangle (if (eq system-type 'gnu/linux) "~/.gnupg/gpg-agent.conf" "no")  :makdirp yes
+default-cache-ttl 86400      # cache for a day
+max-cache-ttl 86400
+no-allow-external-cache
+#+end_src
+
+
+** Eshell
+
+#+begin_src emacs-lisp
+
+  (defun vinid/configure-eshell ()
+    ;; Save command history when commands are entered
+    (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
+
+    ;; Truncate buffer for performance
+    (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
+
+    (setq eshell-history-size         10000
+          eshell-buffer-maximum-lines 10000
+          eshell-hist-ignoredups t
+          eshell-scroll-to-bottom-on-input t))
+
+  (use-package eshell-git-prompt
+    :after eshell)
+
+  (use-package eshell
+    :hook (eshell-first-time-mode . vinid/configure-eshell)
+    :config
+
+    (with-eval-after-load 'esh-opt
+      (setq eshell-destroy-buffer-when-process-dies t)
+      (setq eshell-visual-commands '("htop" "zsh" "vim")))
+
+    (eshell-git-prompt-use-theme 'powerline))
+
+  ;; making the eshell prompt starting with a lambda char
+  (setq eshell-prompt-function
+           (lambda ()
+              (concat "[" (getenv "USER") "]"
+               (eshell/pwd) (if (= (user-uid) 0) " # " " λ "))))
+
+
+#+end_src
+
+** Org Mode
+
+As it stands, most of the configuration is then setted again by NANO Emacs.
+
+**** Use package imports
+
+#+begin_src emacs-lisp
+
+   (defun vinid/org-mode-visual-fill ()
+     (setq visual-fill-column-width 120
+           visual-fill-column-center-text t)
+     (visual-fill-column-mode 1))
+
+   (setq org-adapt-indentation t)
+
+   (defun vinid/org-mode-setup ()
+     (org-indent-mode)
+     (variable-pitch-mode 1)
+     (visual-line-mode 1))
+
+   (set-fringe-mode 0) 
+
+   (use-package visual-fill-column
+     :defer t
+     :hook (org-mode . vinid/org-mode-visual-fill)) 
+
+   (use-package org
+     :hook (org-mode . vinid/org-mode-setup)
+     :config
+     (setq org-ellipsis " ▾"))
+
+   ;; First, enable babel and its languages
+   (org-babel-do-load-languages
+    'org-babel-load-languages
+    '((emacs-lisp . t)
+      (python . t)))
+
+   (custom-set-faces
+    '(org-block ((t (:background "#232629")))))
+
+
+   (push '("conf-unix" . conf-unix) org-src-lang-modes)
+
+   ;; Auto-tangle setup
+   (defun vinid/org-babel-tangle-config ()
+     (when (string-equal (buffer-file-name)
+                         (expand-file-name "~/.emacs.d/test.org"))
+       (let ((org-confirm-babel-evaluate nil))
+         (org-babel-tangle))))
+
+   (add-hook 'org-mode-hook (lambda ()
+                              (add-hook 'after-save-hook #'vinid/org-babel-tangle-config)))
+
+
+   (setq org-ellipsis " ▾")
+
+   ;; Setup hooks after loading
+   (add-hook 'org-mode-hook #'org-indent-mode)
+   (add-hook 'org-mode-hook #'variable-pitch-mode)
+   (add-hook 'org-mode-hook #'visual-line-mode)
+
+   (use-package org-bullets
+     :after org
+     :hook (org-mode . org-bullets-mode)
+     :custom
+     (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+
+
+#+end_src
+
+
+**** Org Roam
+
+#+begin_src emacs-lisp
+  (use-package org-roam
+    :ensure t
+    :custom
+    (org-roam-directory (file-truename "~/org-note-w/orgroam"))
+    :bind (("C-c n l" . org-roam-buffer-toggle)
+           ("C-c n f" . org-roam-node-find)
+           ("C-c n g" . org-roam-graph)
+           ("C-c n i" . org-roam-node-insert)
+           ("C-c n c" . org-roam-capture)
+           ;; Dailies
+           ("C-c n j" . org-roam-dailies-capture-today))
+    :config
+    ;; If you're using a vertical completion framework, you might want a more informative completion interface
+    (setq org-roam-node-display-template (concat "${title:*} " (propertize "${tags:10}" 'face 'org-tag)))
+    (org-roam-db-autosync-mode)
+    ;; If using org-roam-protocol
+    (require 'org-roam-protocol))
+
+
+
+#+end_src
+
+#+begin_src emacs-lisp
+
+  (use-package org-ref
+    :straight t
+    :config
+    (setq bibtex-completion-bibliography '("~/org-note-w/zotero/biblio.bib")
+          bibtex-completion-notes-path "~/org-note-w/zotero/refs/"
+          bibtex-completion-pdf-field "file"
+          bibtex-completion-pdf-opn-function
+          (lambda (fpath)
+            (call-process "open" nil 0 nil fpath))))
+
+  (use-package ivy-bibtex
+    :straight t
+    :after org-ref)
+
+  (use-package org-roam-bibtex
+    :straight t
+    :after org-roam
+    :hook (org-roam-mode . org-roam-bibtex-mode)
+    :config
+    (require 'org-ref)
+    )
+
+#+end_src
+
+** Magit
+
+#+begin_src emacs-lisp
+  
+(use-package magit)
+  
+#+end_src
+
+** Jupyter
+
+#+begin_src emacs-lisp
+
+(use-package jupyter
+  :commands (jupyter-run-repl jupyter-connect-repl))
+
+#+end_src
+
+* Desktop Environment
+
+** EXWM Basic Setup
+
+All the configuration params currently used in EXWM.
+
+#+begin_src emacs-lisp :tangle (if (eq system-type 'gnu/linux) "./emacs.d/init.el" "no")
+  
+  (server-start)
+
+  (setq mouse-autoselect-window t
+	focus-follows-mouse t)
+
+  (defun vinid/exwm-init-hook ()
+    ;; Make workspace 1 be the one where we land at startup
+    (exwm-workspace-switch-create 1))
+
+  (defun vinid/exwm-update-class ()
+    (exwm-workspace-rename-buffer exwm-class-name))
+  ;; defines a function that makes a nicer visualization for the firefox tab
+  (defun vinid/exwm-update-title ()
+    (pcase exwm-class-name
+      ("Firefox" (exwm-workspace-rename-buffer (format "Firefox: %s" exwm-title)))))
+
+  (defun vinid/set-wallpaper ()
+    (interactive)
+    ;; NOTE: You will need to update this to a valid background path!
+    (start-process-shell-command
+     "feh" nil  "feh --bg-scale /home/vinid/Pictures/wall.jpg"))
+
+  (use-package exwm
+    :config
+    ;; Set the default number of workspaces
+    (setq exwm-workspace-number 5)
+
+    ;; When window "class" updates, use it to set the buffer name
+    (add-hook 'exwm-update-class-hook #'vinid/exwm-update-class)
+
+    ;; When EXWM starts up, do some extra configuration
+    (add-hook 'exwm-init-hook #'vinid/exwm-init-hook)
+
+    (setq mouse-autoselect-window nil
+	  focus-follows-mouse nil)
+
+    ;; When window title updates, use it to set the buffer name
+
+    (add-hook 'exwm-update-title-hook #'vinid/exwm-update-title)
+    ;; To add a key binding only available in line-mode, simply define it in
+    ;; `exwm-mode-map'.  The following example shortens 'C-c q' to 'C-q'.
+    (define-key exwm-mode-map [?\C-q] #'exwm-input-send-next-key)
+
+    ;; adding a way to run apps
+    (exwm-input-set-key (kbd "\C-c SPC") 'counsel-linux-app) 
+
+    ;; (counsel-linux-app)
+    ;; toggle fullscreen
+    (exwm-input-set-key (kbd "s-f") 'exwm-layout-toggle-fullscreen)
+
+    ;; Set the wallpaper after changing the resolution
+    (vinid/set-wallpaper)
+
+    ;; These keys should always pass through to Emacs
+    (setq exwm-input-prefix-keys
+	  '(?\C-x
+	    ?\C-u
+	    ?\C-h
+	    ?\M-x
+	    ?\M-`
+	    ?\M-&
+	    ?\M-:
+	    ?\C-\M-j  ;; Buffer list
+	    ?\C-\ ))  ;; Ctrl+Space
+
+
+    ;; Ctrl+Q will enable the next key to be sent directly
+    (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
+
+    ;; The following example demonstrates how to use simulation keys to mimic
+    ;; the behavior of Emacs.  The value of `exwm-input-simulation-keys` is a
+    ;; list of cons cells (SRC . DEST), where SRC is the key sequence you press
+    ;; and DEST is what EXWM actually sends to application.  Note that both SRC
+    ;; and DEST should be key sequences (vector or string).
+    (setq exwm-input-simulation-keys
+	  '(
+	    ;; movement
+	    ([?\C-b] . [left])
+	    ([?\M-b] . [C-left])
+	    ([?\C-f] . [right])
+	    ([?\M-f] . [C-right])
+	    ([?\C-p] . [up])
+	    ([?\C-n] . [down])
+	    ([?\C-a] . [home])
+	    ([?\C-e] . [end])
+	    ([?\M-v] . [prior])
+	    ([?\C-h] . [left delete])
+	    ([?\C-v] . [next])
+	    ([?\C-d] . [delete])
+	    ([?\M-d] . [C-S-right delete])
+	    ([?\C-k] . [S-end delete])
+	    ;; cut paste
+	    ([?\C-w] . [?\C-x])
+	    ([?\M-w] . [?\C-c])
+	    ([?\C-y] . [?\C-v])
+	    ;; search
+	    ([?\C-s] . [?\C-f])))
+
+
+    ;; raise the specified app if it's already started, otherwise start it
+    ;; this should ideally raise buffer the previous buffer, not the current one
+    ;; meaning: if I had chrome on the right side and I call this from the left side
+    ;;          it should show up on the right side
+
+    (defun vinid/run-or-raise (buffer-prefix &optional cmd)
+      (let ((existing-buffer
+	     (cl-dolist (buffer (buffer-list))
+	       (if (string-prefix-p buffer-prefix (buffer-name buffer))
+		   (cl-return buffer)))))
+	(if existing-buffer
+	    ;; it's currently displayed, go to it
+	    (if (get-buffer-window existing-buffer)
+		(message (format "%s" (pop-to-buffer existing-buffer)))
+	      (exwm-workspace-switch-to-buffer existing-buffer))
+	  (start-process-shell-command buffer-prefix nil cmd))))
+
+
+    ;; Set up global key bindings.  These always work, no matter the input state!
+    ;; Keep in mind that changing this list after EXWM initializes has no effect.
+    (setq exwm-input-global-keys
+	  `(
+	    ;; Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
+	    ([?\s-r] . exwm-reset)
+
+	    ;; Move between windows
+	    ([s-left] . windmove-left)
+	    ([s-right] . windmove-right)
+	    ([s-up] . windmove-up)
+	    ([s-down] . windmove-down)
+
+	    ;; Launch applications via shell command
+	    ([?\s-&] . (lambda (command)
+			 (interactive (list (read-shell-command "$ ")))
+			 (start-process-shell-command command nil command)))
+
+	    ;; Switch workspace
+	    ([?\s-w] . exwm-workspace-switch)
+	    ([?\s-`] . (lambda () (interactive) (exwm-workspace-switch-create 0)))
+
+	    ;; 's-N': Switch to certain workspace with Super (Win) plus a number key (0 - 9)
+	    ,@(mapcar (lambda (i)
+			`(,(kbd (format "s-%d" i)) .
+			  (lambda ()
+			    (interactive)
+			    (exwm-workspace-switch-create ,i))))
+		      (number-sequence 0 9))))
+
+    (exwm-enable))
+
+
+#+end_src
+
+
+** Polybar
+
+Polybar serves as the main bar on the top of the screen
+
+
+#+begin_src shell :tangle  (if (eq system-type 'gnu/linux) "/home/vinid/.config/polybar/config" "no")  :mkdirp yes
+
+    ; Docs: https://github.com/polybar/polybar
+    ;==========================================================
+    [settings]
+    screenchange-reload = true
+
+    [global/wm]
+    margin-top = 0
+    margin-bottom = 0
+
+    [colors]
+    background = #f0232635
+    background-alt = #576075
+    foreground = #A6Accd
+    foreground-alt = #555
+    primary = #ffb52a
+    secondary = #e60053
+    alert = #bd2c40
+    underline-1 = #c792ea
+
+
+    [bar/panel]
+    dpi = 250
+
+    [bar/panel]
+    width = 100%
+    height = 55
+    offset-x = 0
+    offset-y = 0
+    fixed-center = true
+    enable-ipc = true
+
+    background = ${colors.background}
+    foreground = ${colors.foreground}
+
+    line-size = 2
+    line-color = #f00
+
+    border-size = 0
+    border-color = #00000000
+
+    padding-top = 5
+    padding-left = 1
+    padding-right = 1
+
+    module-margin = 1
+
+    font-0 = "Cantarell:size=12:weight=bold;2"
+    font-1 = "Font Awesome:size=12;2"
+    font-2 = "Material Icons:size=16;5"
+    font-3 = "Fira Mono:size=11;-3"
+
+    modules-left = exwm-workspace vpn
+    modules-right = cpu memory temperature battery date
+
+    tray-position = right
+    tray-padding = 2
+    tray-maxsize = 28
+
+    cursor-click = pointer
+    cursor-scroll = ns-resize
+
+    [module/exwm-workspace]
+    type = custom/ipc
+    hook-0 = emacsclient -e "exwm-workspace-current-index" | sed -e 's/^"//' -e 's/"$//'
+    initial = 1
+    format-padding = 1
+
+    [module/cpu]
+    type = internal/cpu
+    interval = 2
+    format = <label> <ramp-coreload>
+    click-left = emacsclient -e "(proced)"
+    label = %percentage:2%%
+    ramp-coreload-spacing = 0
+    ramp-coreload-0 = ▁
+    ramp-coreload-0-foreground = ${colors.foreground-alt}
+    ramp-coreload-1 = ▂
+    ramp-coreload-2 = ▃
+    ramp-coreload-3 = ▄
+    ramp-coreload-4 = ▅
+    ramp-coreload-5 = ▆
+    ramp-coreload-6 = ▇
+
+    [module/date]
+    type = internal/date
+    interval = 5
+
+    date = "%a %b %e"
+    date-alt = "%A %B %d %Y"
+
+    time = %l:%M %p
+    time-alt = %H:%M:%S
+
+    format-prefix-foreground = ${colors.foreground-alt}
+
+
+    label = %date% %time%
+
+    [module/battery]
+    type = internal/battery
+    battery = BAT0
+    adapter = ADP1
+    full-at = 98
+    time-format = %-l:%M
+
+    label-charging = %percentage%% / %time%
+    format-charging = <animation-charging> <label-charging>
+
+
+    label-discharging = %percentage%% / %time%
+    format-discharging = <ramp-capacity> <label-discharging>
+    format-full = <ramp-capacity> <label-full>
+
+    ramp-capacity-0 = 
+    ramp-capacity-1 = 
+    ramp-capacity-2 = 
+    ramp-capacity-3 = 
+    ramp-capacity-4 = 
+
+    animation-charging-0 = 
+    animation-charging-1 = 
+    animation-charging-2 = 
+    animation-charging-3 = 
+    animation-charging-4 = 
+    animation-charging-framerate = 750
+
+    [module/memory]
+    type = internal/memory
+    interval = 5
+    format-prefix = " "
+    label = %gb_used%
+
+    [module/temperature]
+    type = internal/temperature
+    thermal-zone = 0
+    warn-temperature = 60
+
+    format = <label>
+    format-warn = <label-warn>
+    format-warn-underline = ${self.format-underline}
+
+    label = %temperature-c%
+    label-warn = %temperature-c%!
+    label-warn-foreground = ${colors.secondary}
+
+    [module/vpn]
+    type = custom/script
+    exec = echo "VPN: " $(nordvpn status | sed -n 's/Status: \([[:alpha:]]\).*/\1/p' | tr -d '[:punct:]')
+    interval = 10
+    format-underline = #268bd2
+    #  format-prefix = "🖧 "
+    format-prefix-foreground = #5b
+  
+#+end_src
+
+Very simple polybar to have on top of the EXWM desktop environment
+
+#+begin_src emacs-lisp :tangle  (if (eq system-type 'gnu/linux) "/home/vinid/.config/polybar/config" "no")
+    
+    (defvar vinid/polybar-process nil
+      "Holds the process of the running Polybar instance, if any")
+    
+    (defun vinid/kill-panel ()
+      (interactive)
+      (when vinid/polybar-process
+        (ignore-errors
+          (kill-process vinid/polybar-process)))
+      (setq vinid/polybar-process nil))
+    
+    (defun vinid/start-panel ()
+      (interactive)
+      (vinid/kill-panel)
+      (setq vinid/polybar-process (start-process-shell-command "polybar" nil "polybar panel")))
+    
+    (defun vinid/send-polybar-hook (module-name hook-index)
+      (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook %s %s" module-name hook-index)))
+    
+    (defun vinid/send-polybar-exwm-workspace ()
+      (vinid/send-polybar-hook "exwm-workspace" 1))
+    
+    ;; Update panel indicator when workspace changes
+    (add-hook 'exwm-workspace-switch-hook #'vinid/send-polybar-exwm-workspace)
+    (vinid/start-panel)
+    
+    (setq exwm-workspace-number 4)
+    
+    (setq exwm-manage-force-tiling nil)
+    
+    ;; Automatically move EXWM buffer to current workspace when selected
+  (setq exwm-layout-show-all-buffers t)
+  
+  ;; Display all EXWM buffers in every workspace buffer list
+  (setq exwm-workspace-show-all-buffers t)
+    
+#+end_src
+
+
+
+
+
+* Apps
+
+** Run in background function
+
+This function allows to run a process in the background
+
+#+begin_src emacs-lisp
+
+  (defun vinid/run-in-background (command)
+     (let ((command-parts (split-string command "[ ]+")))
+       (apply #'call-process `(,(car command-parts) nil 0 nil ,@(cdr command-parts)))))
+
+#+end_src
+
+** Dropbox
+
+#+begin_src emacs-lisp
+
+;(vinid/run-in-background "dropbox start")
+
+#+end_src
+
+** Quick access to some of the files
+
+#+begin_src emacs-lisp
+
+
+  (defun vinid/emacs-configuration ()
+    (interactive)
+    (find-file "~/.emacs.d/emacs_configuration.org"))
+
+  (defun vinid/open-todolist ()
+    (interactive)
+    (find-file "~/Dropbox/org/orgmode/todos.org"))
+
+ (defun vinid/open-inbox ()
+    (interactive)
+    (find-file "~/Dropbox/org/orgmode/inbox.org"))
+
+
+#+end_src
+
+** Miscellanea Keybindings
+
+
+Cleaning unused buffers
+
+#+begin_src emacs-lisp
+
+   (setq clean-buffer-list-delay-special (* 1 3600))
+   (setq clean-buffer-list-delay-general 1)
+   (global-set-key (kbd "C-c e b") 'clean-buffer-list)
+
+#+end_src
+
+#+begin_src emacs-lisp
+
+  (global-set-key (kbd "M-?") 'help-command)
+  (global-set-key (kbd "C-h") 'delete-backward-char)
+  (global-set-key "\C-x\C-m" 'execute-extended-command)
+  (global-set-key "\C-c\C-m" 'execute-extended-command)
+
+  (global-unset-key (kbd "C-j"))
+
+  (use-package avy
+    :ensure t
+    :diminish avy-mode
+    :bind (("H-a"     . avy-goto-word-1)
+           ("H-s"     . avy-goto-char-timer)
+           ("C-c j" . avy-goto-line)
+           ("H-A"     . avy-goto-char))
+    :config (setq avy-all-windows nil))
+
+  (global-set-key (kbd "C-c c") 'org-capture)
+  (global-set-key (kbd "C-c a") 'org-agenda)
+  (global-set-key (kbd "C-c e c") 'vinid/emacs-configuration)
+  (global-set-key (kbd "C-c e t") 'vinid/open-todolist)
+  (global-set-key (kbd "C-c e i") 'vinid/open-inbox)
+
+  (global-unset-key (kbd "C-<wheel-up>"))
+  (global-unset-key (kbd "C-<wheel-down>"))
+#+end_src
+
+
+** 1passel
+
+
+1passel is a very simple utility I have built to manage 1password integration withing EXWM
+
+#+begin_src emacs-lisp
+    
+    (use-package 1passel
+      :straight '(1passel :host github
+                                     :repo "vinid/1passel"
+                                     :branch "master"))
+    
+#+end_src
+
+
+
+** Tmux
+
+This entire configuration comes form https://hamvocke.com/blog/a-guide-to-customizing-your-tmux-conf/
+
+#+begin_src shell :tangle (if (eq system-type 'gnu/linux) "~/.tmux.conf" "no") 
+
+unbind C-b
+set-option -g prefix C-f
+bind-key C-f send-prefix
+
+bind i split-window -h
+bind o split-window -v
+unbind '"'
+unbind %
+
+
+#+end_src
+
+
+* Reference
+
+This configuration is built around the one provided by David Wilson in his stream [[https://github.com/daviwil/emacs-from-scratch/blob/master/Emacs.org][Emacs From Scratch]]
+p
+The org-mode configuration comes from different places but most of it comes from [[https://whhone.com/posts/org-mode-task-management/][Wai Hon's Blog]] and from [[https://emacs.cafe/emacs/orgmode/gtd/2017/06/30/orgmode-gtd.html][Nicolas Petton's Blog]]. (mostly
+
+The code for the run-or-raise function has been taken from [[https://github.com/tedroden/dot-files/tree/636ee636b472078b6a22b2076eb21b5421f58c9b][Here]].
